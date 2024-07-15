@@ -17,38 +17,10 @@ please follow these steps:
 To ensure high-quality and maintainable code, we have established the following standards:
 
 * All code must be C++17 compilable with Clang, GCC and MSVC.
-* Do not use the standard library, use engine types instead unless required (eg.
-  `initalizer_list` and `type_traits`).
 * Code should be compilable on both UNIX/POSIX and Windows platforms.
 * Code with warnings will not be accepted; please address any warnings.
 * Whenever possible, include tests for new features using the test framework.
 * Write Internal documentation for new features using the following style:
-```cpp
-// A templated hash function for a given type `_T`.
-//
-// Template Args:
-// - _T: The type for which to compute the hash value.
-//
-// Detail:
-// Provides a hash function for a given type `_T` using the Fowler–Noll–Vo (FNV) non-cryptographic
-// hash algorithm.
-template <typename _T>
-struct Hash
-{
-    // Computes a hash value for a given value of type `_T`.
-    //
-    // - val: The value of type `_T` to compute the hash for.
-    // Returns: A hash value computed using the FNV algorithm.
-    constexpr usize operator()(const _T& val) const;
-
-    // Computes a hash value for a given value of type `_T` with a specified size.
-    //
-    // - val: The value of type `_T` to compute the hash for.
-    // - size: The number of elements in the value.
-    // Returns: A hash value computed using the FNV algorithm.
-    constexpr usize operator()(const _T& val, usize size) const;
-};
-```
 * Every source file must contain the following license comment at the top:
 ```cpp
 // This file is part of Kryos Engine (https://github.com/Oniup/kryos-engine)
@@ -83,6 +55,6 @@ struct Hash
 * `snake_case` for variables/fields, functions/methods, `PascalCase` for types, type defines, and
   templates parameters. `UPPER_SNAKE_CASE` for macros, constants, and enum values.
 * Avoid abbreviating names, especially for functions/methods and class names.
-* Any internal/private OOP code variables/types/functions and template parameters require `_` as a
-  prefix. Otherwise put inside the `intl` namespace
+* Any internal/private code variables/types/functions and template parameters require `_` as a
+  prefix.
 * Follow the common patterns and styles as the rest of the codebase to be consistent.
