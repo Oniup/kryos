@@ -17,7 +17,7 @@
 
 #include "core/error.h"
 
-#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace ky {
@@ -115,7 +115,7 @@ bool Input::mouse_release(const WindowHandle& handle, MouseButton button) {
 void Input::poll_events() {
     glfwPollEvents();
 
-    usize reg_counted = 0;
+    size_t reg_counted = 0;
     for (_Registered& reg : _instance->_reg_once_buffer) {
         if (reg_counted == _instance->_reg_count) {
             break;
@@ -133,9 +133,9 @@ void Input::poll_events() {
     }
 }
 
-bool Input::_register_once(InputType type, int32 code, bool pressed) {
-    int32 free_index = -1;
-    for (usize i = 0; i < _reg_once_buffer.size(); i++) {
+bool Input::_register_once(InputType type, int code, bool pressed) {
+    int free_index = -1;
+    for (size_t i = 0; i < _reg_once_buffer.size(); i++) {
         if (_reg_once_buffer[i].type == INPUT_TYPE_UNKNOWN) {
             free_index = i;
             continue;

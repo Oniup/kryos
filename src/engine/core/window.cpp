@@ -16,63 +16,63 @@
 #include "core/window.h"
 
 #include "core/error.h"
+#include "core/macros.h"
 
-#include <algorithm>
-#include <iostream>
+#include <string>
 
-#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
 namespace ky {
 
-void WindowHandle::init(const std::string_view& title, int32 width, int32 height,
-                        WindowHandle* parent, bitmap16 opts) {
+void WindowHandle::init(const std::string_view& title, int width, int height, WindowHandle* parent,
+                        int opts) {
     KY_FATAL_CONDITION_MSG(title[title.size()] == '\0', "Title string must be null terminated");
     KY_FATAL_CONDITION_MSG(
         !(opts & WINDOW_HANDLE_FULLSCREEN_BIT && opts & WINDOW_HANDLE_WINDOWED_BIT),
         "Cannot set fullscreen and windowed mode at the same time");
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwWindowHint(GLFW_RESIZABLE, (opts & WINDOW_HANDLE_RESIZEABLE_BIT) != 0);
     glfwWindowHint(GLFW_DECORATED, (opts & ~WINDOW_HANDLE_BORDERLESS_BIT) != 0);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
                    (opts & WINDOW_HANDLE_TRANSPARENT_BUFFER_BIT) != 0);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    // #ifdef __APPLE__
+    //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    // #endif
 
-    GLFWwindow* share = nullptr;
-    if (parent != nullptr) {
-        share = parent->glfw_handle;
-        this->parent = parent;
-    }
+    // GLFWwindow* share = nullptr;
+    // if (parent != nullptr) {
+    //     share = parent->glfw_handle;
+    //     this->parent = parent;
+    // }
+    //
+    // GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    // if (width == 0 || height == 0) {
+    //     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    //     width = mode->width / 2;
+    //     height = mode->height / 2;
+    // }
+    //
+    // if (opts & ~WINDOW_HANDLE_FULLSCREEN_BIT) {
+    //     monitor = nullptr;
+    // }
+    //
+    // glfw_handle = glfwCreateWindow(width, height, title.data(), monitor, share);
+    // KY_FATAL_CONDITION_MSG(glfw_handle != nullptr, "Failed to create GLFW window");
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    if (width == 0 || height == 0) {
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        width = mode->width / 2;
-        height = mode->height / 2;
-    }
+    // if (opts & WINDOW_HANDLE_VSYNC_BIT) {
+    //     glfwSwapInterval(0);
+    // } else {
+    //     glfwSwapInterval(1);
+    // }
 
-    if (opts & ~WINDOW_HANDLE_FULLSCREEN_BIT) {
-        monitor = nullptr;
-    }
-
-    glfw_handle = glfwCreateWindow(width, height, title.data(), monitor, share);
-    KY_FATAL_CONDITION_MSG(glfw_handle != nullptr, "Failed to create GLFW window");
-    glfwMakeContextCurrent(glfw_handle);
-
-    if (opts & WINDOW_HANDLE_VSYNC_BIT) {
-        glfwSwapInterval(0);
-    } else {
-        glfwSwapInterval(1);
-    }
-
+    glfw_handle = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
     options = opts;
 }
 
@@ -86,7 +86,7 @@ void WindowHandle::shutdown(bool remove_child_ref_from_parent) {
     glfwDestroyWindow(glfw_handle);
 
     if (remove_child_ref_from_parent && parent != nullptr) {
-        usize i = 0;
+        size_t i = 0;
         for (; i < parent->children.size(); i++) {
             if (parent->children[i] == *this) {
                 break;
@@ -104,8 +104,8 @@ void WindowHandle::shutdown(bool remove_child_ref_from_parent) {
     children.clear();
 }
 
-WindowHandle& WindowHandle::create_window(const std::string_view& title, int32 width, int32 height,
-                                          bitmap16 opts) {
+WindowHandle& WindowHandle::create_window(const std::string_view& title, int width, int height,
+                                          int opts) {
     WindowHandle child;
     child.init(title, width, height, this, opts);
     children.push_back(std::move(child));
@@ -142,16 +142,11 @@ void WindowHandle::close(bool close) {
     glfwSetWindowShouldClose(glfw_handle, close);
 }
 
-void WindowHandle::make_current_context() const {
-    glfwMakeContextCurrent(glfw_handle);
-}
-
-WindowManager::WindowManager(const std::string_view& title, bitmap16 opts)
+WindowManager::WindowManager(const std::string_view& title, int opts)
         : WindowManager(title, 0, 0, opts) {
 }
 
-WindowManager::WindowManager(const std::string_view& title, int32 width, int32 height,
-                             bitmap16 opts) {
+WindowManager::WindowManager(const std::string_view& title, int width, int height, int opts) {
     KY_FATAL_CONDITION_MSG(glfwInit(), "Failed to initialize GLFW");
     glfwSetErrorCallback(_window_handle_error_callback);
 
@@ -169,7 +164,6 @@ bool WindowManager::continue_runtime_loop() {
 
 void WindowManager::swap_buffers() {
     _swap_buffers(_main);
-    glfwMakeContextCurrent(_main.glfw_handle);
 }
 
 void WindowManager::_window_handle_error_callback(int error, const char* description) {
@@ -187,8 +181,7 @@ void WindowManager::_remove_closed_windows(WindowHandle& handle) {
 }
 
 void WindowManager::_swap_buffers(WindowHandle& handle) {
-    glfwMakeContextCurrent(handle.glfw_handle);
-    glfwSwapBuffers(handle.glfw_handle);
+    // Swap buffer logic...
     for (WindowHandle& child : handle.children) {
         _swap_buffers(child);
     }

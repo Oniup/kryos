@@ -16,7 +16,6 @@
 #ifndef KRYOS_CORE__INPUT_H
 #define KRYOS_CORE__INPUT_H
 
-#include "core/common.h"
 #include "core/input_keycodes.h"
 #include "core/window.h"
 
@@ -40,13 +39,13 @@ enum MouseMode {
 class Input {
     struct _Registered {
         InputType type = INPUT_TYPE_UNKNOWN;
-        int32 code = -1;
+        int code = -1;
         bool remove_next_frame = false;
         bool pressed = false;
     };
 
 public:
-    static constexpr usize REG_ONCE_BUFFER_SIZE = 16;
+    static constexpr size_t REG_ONCE_BUFFER_SIZE = 16;
 
     static void init(Input& instance, WindowManager& window_manager);
 
@@ -74,12 +73,12 @@ public:
 
 private:
     WindowManager* _window_manager = nullptr;
-    usize _reg_count = 0;
+    size_t _reg_count = 0;
     std::array<_Registered, REG_ONCE_BUFFER_SIZE> _reg_once_buffer;
 
     static Input* _instance;
 
-    bool _register_once(InputType type, int32 code, bool pressed);
+    bool _register_once(InputType type, int code, bool pressed);
 };
 
 } // namespace ky

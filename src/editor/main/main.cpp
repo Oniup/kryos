@@ -25,10 +25,10 @@ int main() {
         ky::Input input;
         ky::Input::init(input, window_manager);
 
-        // Test windows
-        ky::WindowHandle& child = window_manager.create_window("Test window", 500, 500);
-        child.create_window("Child of test window", 400, 400,
-                            ky::WINDOW_HANDLE_WINDOWED_BIT | ky::WINDOW_HANDLE_VSYNC_BIT);
+        // // Test windows
+        // ky::WindowHandle& child = window_manager.create_window("Test window", 500, 500);
+        // child.create_window("Child of test window", 400, 400,
+        //                     ky::WINDOW_HANDLE_WINDOWED_BIT | ky::WINDOW_HANDLE_VSYNC_BIT);
 
         while (window_manager.continue_runtime_loop()) {
             window_manager.swap_buffers();

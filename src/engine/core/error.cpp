@@ -24,7 +24,7 @@ namespace error_internal {
 
     static ErrorHandler* error_handler = nullptr;
 
-    void console_error_handler_callback(void*, const char* function, const char* file, int32 line,
+    void console_error_handler_callback(void*, const char* function, const char* file, int line,
                                         const char* msg, ErrorCode code) {
         FILE* out = stderr;
         if (code == ErrorCode::WARNING) {
@@ -36,7 +36,7 @@ namespace error_internal {
     }
 
     // TODO: Global mutex is required for multi-threading
-    void print_error(const char* function, const char* file, int32 line, ErrorCode code,
+    void print_error(const char* function, const char* file, int line, ErrorCode code,
                      const char* fmt, ...) {
         char msg_buf[KY_ERROR_MESSAGE_MAX_SIZE] {};
         va_list args;

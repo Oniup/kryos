@@ -52,32 +52,6 @@
 #    define KY_FORCE_INLINE inline
 #endif
 
-#define KY_STR(non_null_term_str) (int32) non_null_term_str.size(), non_null_term_str.data()
-
-namespace ky {
-
-using int8 = int8_t;
-using int16 = int16_t;
-using int32 = int32_t;
-using int64 = int64_t;
-
-using uint8 = uint8_t;
-using uint16 = uint16_t;
-using uint32 = uint32_t;
-using uint64 = uint64_t;
-
-using float32 = float;
-using float64 = double;
-using float128 = long double;
-
-using byte = char;
-using usize = size_t;
-
-using bitmap8 = uint8;
-using bitmap16 = uint16;
-using bitmap32 = uint32;
-using bitmap64 = uint64;
-
-} // namespace ky
+#define KY_STR(non_null_term_str) (int) non_null_term_str.size(), non_null_term_str.data()
 
 #endif

@@ -16,9 +16,6 @@
 #ifndef KRYOS_CORE__WINDOW_H
 #define KRYOS_CORE__WINDOW_H
 
-#include "core/common.h"
-
-#include <cstdlib>
 #include <glm/glm.hpp>
 #include <string_view>
 #include <vector>
@@ -34,7 +31,7 @@ struct GLFWwindow;
 
 namespace ky {
 
-enum WindowHandleFlags : bitmap16 {
+enum WindowHandleFlags {
     WINDOW_HANDLE_NONE_BIT = 0,
     WINDOW_HANDLE_WINDOWED_BIT = 1 << 0,
     WINDOW_HANDLE_BORDERLESS_BIT = 1 << 1,
@@ -46,12 +43,12 @@ enum WindowHandleFlags : bitmap16 {
 
 struct WindowHandle {
     GLFWwindow* glfw_handle = nullptr;
-    bitmap16 options = WINDOW_HANDLE_NONE_BIT;
+    int options = WINDOW_HANDLE_NONE_BIT;
     WindowHandle* parent = nullptr;
     std::vector<WindowHandle> children = {};
 
-    void init(const std::string_view& title, int32 width, int32 height, WindowHandle* parent,
-              bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT);
+    void init(const std::string_view& title, int width, int height, WindowHandle* parent,
+              int opts = KY_WINDOW_HANDLE_DEFAULT);
 
     void shutdown(bool remove_child_ref_from_parent = true);
 
@@ -63,8 +60,8 @@ struct WindowHandle {
         return glfw_handle != window.glfw_handle;
     }
 
-    WindowHandle& create_window(const std::string_view& title, int32 width, int32 height,
-                                bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT);
+    WindowHandle& create_window(const std::string_view& title, int width, int height,
+                                int opts = KY_WINDOW_HANDLE_DEFAULT);
 
     bool closing() const;
     inline bool valid() const { return glfw_handle != nullptr; }
@@ -75,26 +72,25 @@ struct WindowHandle {
     glm::ivec2 position() const;
 
     void close(bool close = true);
-    void make_current_context() const;
 };
 
 class WindowManager {
 public:
-    WindowManager(const std::string_view& title, bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT);
-    WindowManager(const std::string_view& title, int32 width, int32 height,
-                  bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT);
+    WindowManager(const std::string_view& title, int opts = KY_WINDOW_HANDLE_DEFAULT);
+    WindowManager(const std::string_view& title, int width, int height,
+                  int opts = KY_WINDOW_HANDLE_DEFAULT);
     ~WindowManager();
 
     inline WindowHandle& main() { return _main; }
     inline const WindowHandle& main() const { return _main; }
 
     inline WindowHandle& create_window(const std::string_view& title,
-                                       bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT) {
+                                       int opts = KY_WINDOW_HANDLE_DEFAULT) {
         return create_window(title, 0, 0, opts);
     }
 
-    inline WindowHandle& create_window(const std::string_view& title, int32 width, int32 height,
-                                       bitmap16 opts = KY_WINDOW_HANDLE_DEFAULT) {
+    inline WindowHandle& create_window(const std::string_view& title, int width, int height,
+                                       int opts = KY_WINDOW_HANDLE_DEFAULT) {
         return _main.create_window(title, width, height, opts);
     }
 

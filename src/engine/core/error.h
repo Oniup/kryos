@@ -16,8 +16,6 @@
 #ifndef KRYOS_CORE__ERROR_H
 #define KRYOS_CORE__ERROR_H
 
-#include "core/common.h"
-
 // Error messages:
 // WARNING: These macros work in the opposite way to assert.
 //
@@ -52,7 +50,7 @@ enum class ErrorCode {
 };
 
 struct ErrorHandler {
-    using Callback = void (*)(void* user_data, const char* function, const char* file, int32 line,
+    using Callback = void (*)(void* user_data, const char* function, const char* file, int line,
                               const char* msg, ErrorCode code);
     using FreeUserDataCallback = void (*)(void* user_data);
 
@@ -89,7 +87,7 @@ namespace error {
 
 namespace error_internal {
 
-    void print_error(const char* function, const char* file, int32 line, ErrorCode code,
+    void print_error(const char* function, const char* file, int line, ErrorCode code,
                      const char* fmt, ...);
 
 } // namespace error_internal

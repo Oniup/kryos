@@ -23,7 +23,9 @@ option(GLFW_INSTALL OFF)
 # Sources
 # -------------------------------------------------------------------------------
 # Graphics
-add_subdirectory(glad)
+find_package(Vulkan REQUIRED)
+
+# add_subdirectory(glad)
 add_subdirectory(glfw)
 
 # Linking to Kryos
@@ -33,12 +35,14 @@ target_include_directories(
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/
             ${CMAKE_CURRENT_SOURCE_DIR}/glm
             ${CMAKE_CURRENT_SOURCE_DIR}/fmt
-    PRIVATE ${glfw_INCLUDE_DIRS}
-            ${glad_INCLUDE_DIRS}
+            ${CMAKE_CURRENT_SOURCE_DIR}/glfw/include
+            # ${glfw_INCLUDE_DIRS}
+            # ${glad_INCLUDE_DIRS}
             ${CMAKE_CURRENT_SOURCE_DIR}/entt/src
             ${CMAKE_CURRENT_SOURCE_DIR}/imgui
+            ${Vulkan_INCLUDE_DIRS}
 )
 target_link_libraries(
     kryos
-    PRIVATE glad glfw
+    PRIVATE glfw ${Vulkan_LIBRARIES}
 )
