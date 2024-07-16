@@ -3,21 +3,39 @@
 > Keep categories listed alphabetically and the library tile should be matching their respective
 > folder names. Make sure to keep the styling consistent across all entries
 
-# Vulkan Headers
+### entt
 
-Install at https://www.lunarg.com/vulkan-sdk/
-
-### flecs
-
-* ***Upstream***: https://github.com/SanderMertens/flecs
-* ***Version***: 3.2.11
-* ***License***: [MIT](./flecs/LICENSE)
+* ***Upstream***: https://github.com/skypjack/entt.git
+* ***Version***: EnTT-v3.13.2
+* ***License***: [MIT](./entt/LICENSE)
 * ***Extracted Files***:
-	+ flecs.c
-	+ flecs.h
-	+ LICENSE
-	+ CMakeLists.txt
-	+ README.md
+    + single_include/*
+    + src/*
+    + AUTHORS
+    + LICENSE
+    + README.md
+
+### fmt
+
+* ***Upstream***: https://github.com/fmtlib/fmt.git
+* ***Version***: 11.0.1
+* ***License***: [MIT](./fmt/LICENSE)
+* ***Extracted Files***: 
+    + include/*
+    + LICENSE
+    + README.md
+
+### glad
+
+* ***Upstream***: https://glad.dav1d.de
+* ***Verison***: OpenGL 4.5
+* ***License***: [CC0 1.0 and Apache 2.0](./glad/LICENSE)
+* ***Extracted Generated Files***: 
+    + LICENSE
+    + src/*
+    + include/*
+* ***Files Added***: 
+    + CMakeLists.txt
 
 ### glfw
 
@@ -37,8 +55,8 @@ Install at https://www.lunarg.com/vulkan-sdk/
 
 ### glm
 
-* ***Upstream***: https://github.com/g-truc/glm
-* ***Version***: 1.0.1
+* ***Upstream***: https://github.com/g-truc/glm.git
+* ***Version***: GLM 1.0.1
 * ***License***: [MIT](./glfw/copying.txt)
 * ***Extracted Files***:
     + glm/*
@@ -65,6 +83,8 @@ Install at https://www.lunarg.com/vulkan-sdk/
     + imstb_textedit.h
     + imstb_truetype.h
     + LICENSE.txt
+* ***Files Added***: 
+    CMakeLists.txt
 
 ## Libraries Under Consideration
 

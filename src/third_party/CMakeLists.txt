@@ -15,8 +15,6 @@
 
 # Options
 # -------------------------------------------------------------------------------
-
-# GLFW
 option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 option(GLFW_BUILD_DOCS OFF)
@@ -32,17 +30,15 @@ add_subdirectory(glfw)
 # -------------------------------------------------------------------------------
 target_include_directories(
     kryos
-    PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/
             ${CMAKE_CURRENT_SOURCE_DIR}/glm
+            ${CMAKE_CURRENT_SOURCE_DIR}/fmt
     PRIVATE ${glfw_INCLUDE_DIRS}
-            ${Vulkan_INCLUDE_DIRS}
-)
-target_sources(
-    kryos
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/flecs/flecs.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/flecs/flecs.c
+            ${glad_INCLUDE_DIRS}
+            ${CMAKE_CURRENT_SOURCE_DIR}/entt/src
+            ${CMAKE_CURRENT_SOURCE_DIR}/imgui
 )
 target_link_libraries(
     kryos
-    PRIVATE glad glfw ${Vulkan_LIBRARIES}
+    PRIVATE glad glfw
 )

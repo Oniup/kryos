@@ -49,4 +49,4 @@ All contributions are welcome! Please see the [Guidelines](./CONTRIBUTE.md) if y
 
 # License
 
-Kryos Engine is licensed under the MIT License - see the [License](./LICENSE.md) file for details.
+Kryos Engine is licensed under the MIT License - see the [License](./LICENSE) file for details.
