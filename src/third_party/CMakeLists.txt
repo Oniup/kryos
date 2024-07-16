@@ -30,11 +30,15 @@ add_subdirectory(glfw)
 
 # Linking to Kryos
 # -------------------------------------------------------------------------------
+target_compile_definitions(
+    kryos PUBLIC FMT_HEADER_ONLY
+)
+
 target_include_directories(
     kryos
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/
             ${CMAKE_CURRENT_SOURCE_DIR}/glm
-            ${CMAKE_CURRENT_SOURCE_DIR}/fmt
+            ${CMAKE_CURRENT_SOURCE_DIR}/fmt/include
             ${CMAKE_CURRENT_SOURCE_DIR}/glfw/include
             # ${glfw_INCLUDE_DIRS}
             # ${glad_INCLUDE_DIRS}

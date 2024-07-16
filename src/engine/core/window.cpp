@@ -33,14 +33,12 @@ void WindowHandle::init(const std::string_view& title, int width, int height, Wi
         "Cannot set fullscreen and windowed mode at the same time");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    glfwWindowHint(GLFW_RESIZABLE, (opts & WINDOW_HANDLE_RESIZEABLE_BIT) != 0);
-    glfwWindowHint(GLFW_DECORATED, (opts & ~WINDOW_HANDLE_BORDERLESS_BIT) != 0);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
-                   (opts & WINDOW_HANDLE_TRANSPARENT_BUFFER_BIT) != 0);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    // glfwWindowHint(GLFW_RESIZABLE, (opts & WINDOW_HANDLE_RESIZEABLE_BIT) != 0);
+    // glfwWindowHint(GLFW_DECORATED, (opts & ~WINDOW_HANDLE_BORDERLESS_BIT) != 0);
+    // glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
+    //                (opts & WINDOW_HANDLE_TRANSPARENT_BUFFER_BIT) != 0);
 
     // #ifdef __APPLE__
     //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -153,7 +151,8 @@ WindowManager::WindowManager(const std::string_view& title, int width, int heigh
     _main.init(title, width, height, nullptr, opts);
 }
 
-WindowManager::~WindowManager() {
+void WindowManager::shutdown() {
+    _main.shutdown();
     glfwTerminate();
 }
 

@@ -79,7 +79,8 @@ public:
     WindowManager(const std::string_view& title, int opts = KY_WINDOW_HANDLE_DEFAULT);
     WindowManager(const std::string_view& title, int width, int height,
                   int opts = KY_WINDOW_HANDLE_DEFAULT);
-    ~WindowManager();
+
+    void shutdown();
 
     inline WindowHandle& main() { return _main; }
     inline const WindowHandle& main() const { return _main; }
