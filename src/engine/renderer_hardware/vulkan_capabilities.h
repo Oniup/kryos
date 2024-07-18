@@ -21,7 +21,7 @@
 
 namespace ky {
 
-struct VulkanAttributes {
+struct VulkanCapabilities {
 #ifndef NDEBUG
     static bool check_required_validation_layers(const std::vector<const char*>& required);
 #endif

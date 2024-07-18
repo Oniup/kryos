@@ -18,26 +18,29 @@
 
 #include "core/input_keycodes.h"
 #include "core/window.h"
-
 #include <array>
 
 namespace ky {
 
-enum InputType {
+enum InputType
+{
     INPUT_TYPE_UNKNOWN = -1,
     INPYT_TYPE_KEYBOARD,
     INPUT_TYPE_MOUSE,
     INPUT_TYPE_GAME_PAD,
 };
 
-enum MouseMode {
+enum MouseMode
+{
     MOUSE_MODE_VISABLE,
     MOUSE_MODE_HIDDEN,
     MOUSE_MODE_CAPTURED,
 };
 
-class Input {
-    struct _Registered {
+class Input
+{
+    struct _Registered
+    {
         InputType type = INPUT_TYPE_UNKNOWN;
         int code = -1;
         bool remove_next_frame = false;

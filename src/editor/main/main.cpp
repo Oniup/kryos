@@ -13,24 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "core/error.h"
+#include "core/console.h"
 #include "core/input.h"
 #include "core/window.h"
 #include "renderer_hardware/vulkan_capabilities.h"
 #include "renderer_hardware/vulkan_context.h"
-
 #include <fmt/format.h>
 
-void print_rhi_info() {
+void print_rhi_info()
+{
 #ifndef NDEBUG
     bool validation_layers_enabled = true;
     fmt::println("\nAvailable vulkan validation layers:");
-    for (VkLayerProperties& property : ky::VulkanAttributes::available_validation_layers()) {
+    for (VkLayerProperties& property : ky::VulkanCapabilities::available_validation_layers()) {
         fmt::println(" - {}", property.layerName);
     }
 
     fmt::println("\nRequired vulkan validation layers:");
-    for (const char* name : ky::VulkanAttributes::required_validation_layers()) {
+    for (const char* name : ky::VulkanCapabilities::required_validation_layers()) {
         fmt::println(" - {}", name);
     }
 #else
@@ -38,34 +38,50 @@ void print_rhi_info() {
 #endif
 
     fmt::println("\nAvailable vulkan instance extensions:");
-    for (VkExtensionProperties& property : ky::VulkanAttributes::available_instance_extensions()) {
+    for (VkExtensionProperties& property :
+         ky::VulkanCapabilities::available_instance_extensions()) {
         fmt::println(" - {}", property.extensionName);
     }
 
     fmt::println("\nRequired vulkan instance extensions:");
     for (const char* name :
-         ky::VulkanAttributes::required_instance_extensions(validation_layers_enabled)) {
+         ky::VulkanCapabilities::required_instance_extensions(validation_layers_enabled)) {
         fmt::println(" - {}", name);
     }
 }
 
-int main() {
-    ky::error::init();
+void test_console_macros()
+{
+    KY_CONTEXT_VERBOSE("HEADING", "This is {}", "a test");
+    KY_CONTEXT_INFO("HEADING", "This is {}", "a test");
+    KY_CONTEXT_WARN("HEADING", "This is {}", "a test");
+    KY_CONTEXT_ERROR("HEADING", "This is {}", "a test");
+    KY_VULKAN_CONDITION_FATAL(false, "This is {}", "a test");
+}
 
-    ky::WindowManager window_manager("Kryos Engine");
+int main()
+{
+    ky::ConsoleManager console({
+        new ky::ConsoleTerminalOutput(ky::CONSOLE_FLUSH_PER_MSG_BIT | ky::CONSOLE_COLOR_BIT |
+                                      ky::CONSOLE_BREAK_AFTER_INFO),
+    });
+
+    test_console_macros();
+
+    ky::WindowManager windows("Kryos Engine");
 
     print_rhi_info();
-    ky::VulkanContext rhi_context("Kryos Engine", window_manager);
+    ky::VulkanContext render_hardware("Kryos Engine", windows);
 
     ky::Input input;
-    ky::Input::init(input, window_manager);
+    ky::Input::init(input, windows);
 
     // while (window_manager.continue_runtime_loop()) {
     //     window_manager.swap_buffers();
     //     input.poll_events();
     // }
 
-    rhi_context.shutdown();
-    window_manager.shutdown();
-    ky::error::shutdown();
+    render_hardware.shutdown();
+    windows.shutdown();
+    console.shutdown();
 }

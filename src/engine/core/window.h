@@ -31,7 +31,8 @@ struct GLFWwindow;
 
 namespace ky {
 
-enum WindowHandleFlags {
+enum WindowHandleFlags
+{
     WINDOW_HANDLE_NONE_BIT = 0,
     WINDOW_HANDLE_WINDOWED_BIT = 1 << 0,
     WINDOW_HANDLE_BORDERLESS_BIT = 1 << 1,
@@ -41,7 +42,8 @@ enum WindowHandleFlags {
     WINDOW_HANDLE_TRANSPARENT_BUFFER_BIT = 1 << 5,
 };
 
-struct WindowHandle {
+struct WindowHandle
+{
     GLFWwindow* glfw_handle = nullptr;
     int options = WINDOW_HANDLE_NONE_BIT;
     WindowHandle* parent = nullptr;
@@ -52,11 +54,13 @@ struct WindowHandle {
 
     void shutdown(bool remove_child_ref_from_parent = true);
 
-    inline bool operator==(const WindowHandle& window) const {
+    inline bool operator==(const WindowHandle& window) const
+    {
         return glfw_handle == window.glfw_handle;
     }
 
-    inline bool operator!=(const WindowHandle& window) const {
+    inline bool operator!=(const WindowHandle& window) const
+    {
         return glfw_handle != window.glfw_handle;
     }
 
@@ -74,7 +78,8 @@ struct WindowHandle {
     void close(bool close = true);
 };
 
-class WindowManager {
+class WindowManager
+{
 public:
     WindowManager(const std::string_view& title, int opts = KY_WINDOW_HANDLE_DEFAULT);
     WindowManager(const std::string_view& title, int width, int height,
@@ -86,12 +91,14 @@ public:
     inline const WindowHandle& main() const { return _main; }
 
     inline WindowHandle& create_window(const std::string_view& title,
-                                       int opts = KY_WINDOW_HANDLE_DEFAULT) {
+                                       int opts = KY_WINDOW_HANDLE_DEFAULT)
+    {
         return create_window(title, 0, 0, opts);
     }
 
     inline WindowHandle& create_window(const std::string_view& title, int width, int height,
-                                       int opts = KY_WINDOW_HANDLE_DEFAULT) {
+                                       int opts = KY_WINDOW_HANDLE_DEFAULT)
+    {
         return _main.create_window(title, width, height, opts);
     }
 

@@ -19,9 +19,10 @@
 // Same key codes from GLFW
 
 namespace ky {
-// clang-format off
 
-enum KeyCode {
+// clang-format off
+enum KeyCode
+{
     KeyCode_Unknown = -1,
 
     // PrintAble keys
@@ -155,7 +156,8 @@ enum KeyCode {
     KeyCode_Last = KeyCode_Menu,
 };
 
-enum KeyMod {
+enum KeyMod
+{
     // If this bit is set one or more Shift keys were held down.
     KeyMod_Shift = 0x0001,
     // If this bit is set one or more control keys were held down.
@@ -174,7 +176,8 @@ enum KeyMod {
 
 /*! @} */
 
-enum MouseButton {
+enum MouseButton
+{
     MouseButton_1      = 0,
     MouseButton_2      = 1,
     MouseButton_3      = 2,
@@ -189,7 +192,8 @@ enum MouseButton {
     MouseButton_Middle = MouseButton_3,
 };
 
-enum GamepadJoystick {
+enum GamepadJoystick
+{
     GamepadJoystick_1    = 0,
     GamepadJoystick_2    = 1,
     GamepadJoystick_3    = 2,
@@ -209,7 +213,8 @@ enum GamepadJoystick {
     GamepadJoystick_LAST = GamepadJoystick_16,
 };
 
-enum GamepadButton {
+enum GamepadButton
+{
     GamepadButton_A            = 0,
     GamepadButton_B            = 1,
     GamepadButton_X            = 2,
@@ -233,7 +238,8 @@ enum GamepadButton {
     GamepadButton_Triangle     = GamepadButton_Y,
 };
 
-enum GamepadAxis {
+enum GamepadAxis
+{
     GamepadAxis_LeftX         = 0,
     GamepadAxis_LeftY         = 1,
     GamepadAxis_RightX        = 2,
@@ -242,8 +248,8 @@ enum GamepadAxis {
     GamepadAxis_RightTrigger  = 5,
     GamepadAxis_Last          = GamepadAxis_RightTrigger,
 };
-
 // clang-format on
+
 } // namespace ky
 
 #endif

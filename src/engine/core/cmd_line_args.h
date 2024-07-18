@@ -19,9 +19,11 @@
 
 namespace ky {
 
-class CommandLineArgs {
+class CommandLineArgs
+{
 public:
-    struct Command {
+    struct Command
+    {
         std::string_view flag;
 
         inline bool valid() const { return !flag.empty(); }

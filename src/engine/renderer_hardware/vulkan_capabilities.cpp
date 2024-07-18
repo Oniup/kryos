@@ -14,7 +14,6 @@
 // limitations under the License.
 
 #include "renderer_hardware/vulkan_capabilities.h"
-
 #include <GLFW/glfw3.h>
 #include <cstring>
 
@@ -29,7 +28,8 @@ static std::vector<const char*> _REQUIRED_VALIDATION_LAYER_NAMES {
 #endif
 
 #ifndef NDEBUG
-bool VulkanAttributes::check_required_validation_layers(const std::vector<const char*>& required) {
+bool VulkanCapabilities::check_required_validation_layers(
+    const std::vector<const char*>& required) {
     std::vector<VkLayerProperties> properties = available_validation_layers();
 
     for (const char* layer : required) {
@@ -50,7 +50,7 @@ bool VulkanAttributes::check_required_validation_layers(const std::vector<const 
 }
 #endif
 
-bool VulkanAttributes::check_required_instance_extensions(
+bool VulkanCapabilities::check_required_instance_extensions(
     const std::vector<const char*>& required) {
     std::vector<VkExtensionProperties> properties = available_instance_extensions();
 
@@ -72,12 +72,12 @@ bool VulkanAttributes::check_required_instance_extensions(
 }
 
 #ifndef NDEBUG
-std::vector<const char*> VulkanAttributes::required_validation_layers() {
+std::vector<const char*> VulkanCapabilities::required_validation_layers() {
     return _REQUIRED_VALIDATION_LAYER_NAMES;
 }
 #endif
 
-std::vector<const char*> VulkanAttributes::required_instance_extensions(bool validation_layers) {
+std::vector<const char*> VulkanCapabilities::required_instance_extensions(bool validation_layers) {
     uint32_t glfw_extension_count = 0;
     const char** glfw_extension_names = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     std::vector<const char*> extensions(glfw_extension_names,
@@ -93,7 +93,7 @@ std::vector<const char*> VulkanAttributes::required_instance_extensions(bool val
 }
 
 #ifndef NDEBUG
-std::vector<VkLayerProperties> VulkanAttributes::available_validation_layers() {
+std::vector<VkLayerProperties> VulkanCapabilities::available_validation_layers() {
     uint32_t count = 0;
     vkEnumerateInstanceLayerProperties(&count, nullptr);
     std::vector<VkLayerProperties> properties(count);
@@ -102,7 +102,7 @@ std::vector<VkLayerProperties> VulkanAttributes::available_validation_layers() {
 }
 #endif
 
-std::vector<VkExtensionProperties> VulkanAttributes::available_instance_extensions() {
+std::vector<VkExtensionProperties> VulkanCapabilities::available_instance_extensions() {
     unsigned int count = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
     std::vector<VkExtensionProperties> properties(count);

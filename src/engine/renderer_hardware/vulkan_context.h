@@ -17,13 +17,13 @@
 #define KRYOS_RENDERER_HARDWARE__VULKAN_CONTEXT_H
 
 #include "core/window.h"
-
 #include <string_view>
 #include <vulkan/vulkan.h>
 
 namespace ky {
 
-class VulkanContext {
+class VulkanContext
+{
     friend WindowManager;
 
 public:

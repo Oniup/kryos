@@ -14,51 +14,56 @@
 // limitations under the License.
 
 #include "renderer_hardware/vulkan_context.h"
-
-#include "core/error.h"
+#include "core/console.h"
 #include "renderer_hardware/vulkan_capabilities.h"
-
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
 
 namespace ky {
 
 #ifndef NDEBUG
-static VKAPI_ATTR VkBool32 VKAPI_CALL
-debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
-               VkDebugUtilsMessageTypeFlagsEXT message_type,
-               const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void*) {
-    // TODO: Option for verbose messages
-    if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        KY_ERROR_MSG("Vulkan validation layer: %s", callback_data->pMessage);
+static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void*)
+{
+    if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+        KY_VULKAN_ERROR(callback_data->pMessage);
+    } else if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+        KY_VULKAN_ERROR(callback_data->pMessage);
+    } else if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+        KY_VULKAN_ERROR(callback_data->pMessage);
+    } else {
+        KY_VULKAN_VERBOSE(callback_data->pMessage);
     }
-
     return VK_FALSE;
 }
 #endif
 
 VulkanContext::VulkanContext(const std::string_view& app_name, WindowManager& window_manager)
-      : _window_manager(&window_manager) {
+      : _window_manager(&window_manager)
+{
 #ifndef NDEBUG
     bool validation_layers_enabled;
-    KY_FATAL_CONDITION(_init_instance(app_name, validation_layers_enabled));
+    KY_VULKAN_CONDITION_FATAL(_init_instance(app_name, validation_layers_enabled),
+                              "Failed to create instance");
     if (validation_layers_enabled) {
-        KY_FATAL_CONDITION(_init_validation_layers());
+        KY_VULKAN_CONDITION_FATAL(_init_validation_layers(), "Failed to create debug messenger");
     }
 #else
-    _init_instance(app_name);
+    KY_VULKAN_CONDITION_FATAL(_init_instance(app_name), "Failed to create instance");
 #endif
 }
 
-void VulkanContext::shutdown() {
+void VulkanContext::shutdown()
+{
 #ifndef NDEBUG
     auto destroy_debug_messenger = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
         _instance, "vkDestroyDebugUtilsMessengerEXT");
     if (destroy_debug_messenger != nullptr) {
         destroy_debug_messenger(_instance, _debug_messenger, nullptr);
     } else {
-        KY_ERROR_MSG("Failed to destroy vulkan debug messenger: Could not find "
-                     "vkDebugDestroyUtilsMessengerEXT");
+        KY_VULKAN_ERROR("Failed to destroy vulkan debug messenger: Could not find "
+                        "vkDebugDestroyUtilsMessengerEXT");
     }
 #endif
 
@@ -73,21 +78,20 @@ bool VulkanContext::_init_instance(const std::string_view& app_name)
 #endif
 {
 #ifndef NDEBUG
-    std::vector<const char*> validation_layers = VulkanAttributes::required_validation_layers();
-    if (VulkanAttributes::check_required_validation_layers(validation_layers)) {
+    std::vector<const char*> validation_layers = VulkanCapabilities::required_validation_layers();
+    if (VulkanCapabilities::check_required_validation_layers(validation_layers)) {
         validation_layers_enabled = true;
     } else {
-        KY_ERROR_MSG("Validation layers are disabled: Not all required layers are available");
+        KY_VULKAN_ERROR("Validation layers are disabled: Not all required layers "
+                        "are available");
         validation_layers_enabled = false;
     }
 
     std::vector<const char*> extensions =
-        VulkanAttributes::required_instance_extensions(validation_layers_enabled);
-    if (!VulkanAttributes::check_required_instance_extensions(extensions)) {
-        KY_ERROR_MSG(
-            "Failed to create vulkan instance: Not all required extensions are available");
-        return false;
-    }
+        VulkanCapabilities::required_instance_extensions(validation_layers_enabled);
+    KY_VULKAN_CONDITION_ERROR_RETURN(
+        VulkanCapabilities::check_required_instance_extensions(extensions), false,
+        "Failed to create instance. Not all required extensions are available");
 
     std::printf("\nLoading instance extensions:\n");
     for (const char* name : extensions) {
@@ -95,11 +99,9 @@ bool VulkanContext::_init_instance(const std::string_view& app_name)
     }
 #else
     std::vector<const char*> extensions = VulkanAttributes::required_instance_extensions(false);
-    if (!VulkanAttributes::check_required_instance_extensions(extensions)) {
-        KY_ERROR_MSG(
-            "Failed to create vulkan instance: Not all required extensions are available");
-        return false;
-    }
+    KY_VULKAN_CONDITION_ERROR_RETURN(
+        VulkanAttributes::check_required_instance_extensions(extensions), false,
+        "Failed to create instance: Not all required extensions are available");
 #endif
 
     VkApplicationInfo app_info {};
@@ -137,28 +139,30 @@ bool VulkanContext::_init_instance(const std::string_view& app_name)
     info.ppEnabledLayerNames = nullptr;
 #endif
 
-    KY_ERROR_CONDITION_MSG_RETURN(vkCreateInstance(&info, nullptr, &_instance) == VK_SUCCESS,
-                                  false, "Failed to create vulkan instance");
+    KY_VULKAN_CONDITION_ERROR_RETURN(vkCreateInstance(&info, nullptr, &_instance) == VK_SUCCESS,
+                                     false, "Failed to create instance");
     return true;
 }
 
 #ifndef NDEBUG
-bool VulkanContext::_init_validation_layers() {
+bool VulkanContext::_init_validation_layers()
+{
     VkDebugUtilsMessengerCreateInfoEXT create_info = _debug_messenger_create_info();
 
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
         _instance, "vkCreateDebugUtilsMessengerEXT");
-    KY_ERROR_CONDITION_MSG_RETURN(func != nullptr, false,
-                                  "Failed to load vulkan debug utils messenger extenion. Could "
-                                  "not find PFN_vkCreateDebugUtilsMessengerEXT");
+    KY_VULKAN_CONDITION_ERROR_RETURN(func != nullptr, false,
+                                     "Failed to load debug utils messenger extenion. Could "
+                                     "not find PFN_vkCreateDebugUtilsMessengerEXT");
 
     VkResult result = func(_instance, &create_info, nullptr, &_debug_messenger);
-    KY_ERROR_CONDITION_MSG_RETURN(result == VK_SUCCESS, false,
-                                  "Failed to initialize vulkan debug utils messenger");
+    KY_VULKAN_CONDITION_ERROR_RETURN(result == VK_SUCCESS, false,
+                                     "Failed to initialize debug utils messenger");
     return true;
 }
 
-VkDebugUtilsMessengerCreateInfoEXT VulkanContext::_debug_messenger_create_info() {
+VkDebugUtilsMessengerCreateInfoEXT VulkanContext::_debug_messenger_create_info()
+{
     VkDebugUtilsMessengerCreateInfoEXT create_info {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     create_info.pNext = nullptr;

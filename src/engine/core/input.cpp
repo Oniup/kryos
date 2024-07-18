@@ -13,11 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "core/input.h"
-
-#include "core/error.h"
-
 #define GLFW_INCLUDE_VULKAN
+
+#include "core/input.h"
 #include <GLFW/glfw3.h>
 
 namespace ky {
@@ -38,7 +36,8 @@ Input* Input::_instance = nullptr;
     }                                                                         \
     return result
 
-void Input::init(Input& instance, WindowManager& window_manager) {
+void Input::init(Input& instance, WindowManager& window_manager)
+{
     _instance = &instance;
     _instance->_window_manager = &window_manager;
     for (_Registered& reg : _instance->_reg_once_buffer) {
@@ -46,75 +45,91 @@ void Input::init(Input& instance, WindowManager& window_manager) {
     }
 }
 
-bool Input::key_pressed(KeyCode code) {
+bool Input::key_pressed(KeyCode code)
+{
     KY_REG_ONCE_IMPL(key_press, INPYT_TYPE_KEYBOARD, code, true);
 }
 
-bool Input::key_released(KeyCode code) {
+bool Input::key_released(KeyCode code)
+{
     KY_REG_ONCE_IMPL(key_release, INPYT_TYPE_KEYBOARD, code, false);
 }
 
-bool Input::key_pressed(const WindowHandle& handle, KeyCode code) {
+bool Input::key_pressed(const WindowHandle& handle, KeyCode code)
+{
     KY_REG_ONCE_WITH_HANDLE_IMPL(key_press, handle, INPYT_TYPE_KEYBOARD, code, true);
 }
 
-bool Input::key_released(const WindowHandle& handle, KeyCode code) {
+bool Input::key_released(const WindowHandle& handle, KeyCode code)
+{
     KY_REG_ONCE_WITH_HANDLE_IMPL(key_release, handle, INPYT_TYPE_KEYBOARD, code, false);
 }
 
-bool Input::key_press(KeyCode code) {
+bool Input::key_press(KeyCode code)
+{
     return glfwGetKey(_instance->_window_manager->main().glfw_handle, code) == GLFW_PRESS;
 }
 
-bool Input::key_release(KeyCode code) {
+bool Input::key_release(KeyCode code)
+{
     return glfwGetKey(_instance->_window_manager->main().glfw_handle, code) == GLFW_RELEASE;
 }
 
-bool Input::key_press(const WindowHandle& handle, KeyCode code) {
+bool Input::key_press(const WindowHandle& handle, KeyCode code)
+{
     return glfwGetKey(handle.glfw_handle, code) == GLFW_PRESS;
 }
 
-bool Input::key_release(const WindowHandle& handle, KeyCode code) {
+bool Input::key_release(const WindowHandle& handle, KeyCode code)
+{
     return glfwGetKey(handle.glfw_handle, code) == GLFW_RELEASE;
 }
 
-bool Input::mouse_pressed(MouseButton button) {
+bool Input::mouse_pressed(MouseButton button)
+{
     KY_REG_ONCE_IMPL(mouse_press, INPUT_TYPE_MOUSE, button, true);
 }
 
-bool Input::mouse_released(MouseButton button) {
+bool Input::mouse_released(MouseButton button)
+{
     KY_REG_ONCE_IMPL(mouse_release, INPUT_TYPE_MOUSE, button, false);
 }
 
-bool Input::mouse_pressed(const WindowHandle& handle, MouseButton button) {
+bool Input::mouse_pressed(const WindowHandle& handle, MouseButton button)
+{
     KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_press, handle, INPUT_TYPE_MOUSE, button, true);
 }
 
-bool Input::mouse_released(const WindowHandle& handle, MouseButton button) {
+bool Input::mouse_released(const WindowHandle& handle, MouseButton button)
+{
     KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_release, handle, INPUT_TYPE_MOUSE, button, false);
 }
 
-bool Input::mouse_press(MouseButton button) {
+bool Input::mouse_press(MouseButton button)
+{
     return glfwGetMouseButton(_instance->_window_manager->main().glfw_handle, button) ==
            GLFW_PRESS;
 }
 
-bool Input::mouse_release(MouseButton button) {
+bool Input::mouse_release(MouseButton button)
+{
     return glfwGetMouseButton(_instance->_window_manager->main().glfw_handle, button) ==
            GLFW_RELEASE;
 }
 
-bool Input::mouse_press(const WindowHandle& handle, MouseButton button) {
+bool Input::mouse_press(const WindowHandle& handle, MouseButton button)
+{
     return glfwGetMouseButton(handle.glfw_handle, button) == GLFW_PRESS;
 }
 
-bool Input::mouse_release(const WindowHandle& handle, MouseButton button) {
+bool Input::mouse_release(const WindowHandle& handle, MouseButton button)
+{
     return glfwGetMouseButton(handle.glfw_handle, button) == GLFW_RELEASE;
 }
 
-void Input::poll_events() {
+void Input::poll_events()
+{
     glfwPollEvents();
-
     size_t reg_counted = 0;
     for (_Registered& reg : _instance->_reg_once_buffer) {
         if (reg_counted == _instance->_reg_count) {
@@ -133,7 +148,8 @@ void Input::poll_events() {
     }
 }
 
-bool Input::_register_once(InputType type, int code, bool pressed) {
+bool Input::_register_once(InputType type, int code, bool pressed)
+{
     int free_index = -1;
     for (size_t i = 0; i < _reg_once_buffer.size(); i++) {
         if (_reg_once_buffer[i].type == INPUT_TYPE_UNKNOWN) {
@@ -147,7 +163,7 @@ bool Input::_register_once(InputType type, int code, bool pressed) {
             return false;
         }
     }
-    KY_ERROR_CONDITION_MSG_RETURN(free_index != -1, false, "Input register once buffer full");
+    // KY_ERROR_CONDITION_MSG_RETURN(free_index != -1, false, "Input register once buffer full");
 
     _reg_once_buffer[free_index] = _Registered {
         .type = type,

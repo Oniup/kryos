@@ -1,5 +1,6 @@
 ---
 BasedOnStyle: LLVM
+BreakBeforeBraces: Mozilla
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveShortCaseStatements:
@@ -35,7 +36,7 @@ QualifierAlignment: Left
 ReferenceAlignment: Pointer
 ReflowComments: true
 RemoveBracesLLVM: false
-IncludeBlocks: Regroup
+IncludeBlocks: Merge
 SpaceBeforeCpp11BracedList: true
 SpaceBeforeCtorInitializerColon: true
 Standard: c++17
