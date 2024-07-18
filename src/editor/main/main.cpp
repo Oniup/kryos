@@ -16,41 +16,49 @@
 #include "core/error.h"
 #include "core/input.h"
 #include "core/window.h"
+#include "renderer_hardware/vulkan_capabilities.h"
 #include "renderer_hardware/vulkan_context.h"
 
 #include <fmt/format.h>
 
 void print_rhi_info() {
-    fmt::println("Available vulkan instance extensions:");
-    for (std::string& name : ky::VulkanContext::available_instance_extensions_names()) {
-        fmt::println(" - {}", name);
+#ifndef NDEBUG
+    bool validation_layers_enabled = true;
+    fmt::println("\nAvailable vulkan validation layers:");
+    for (VkLayerProperties& property : ky::VulkanAttributes::available_validation_layers()) {
+        fmt::println(" - {}", property.layerName);
     }
 
-    fmt::println("\nRequired instance extension:");
-    for (const char* name : ky::VulkanContext::required_instance_extensions_names()) {
+    fmt::println("\nRequired vulkan validation layers:");
+    for (const char* name : ky::VulkanAttributes::required_validation_layers()) {
+        fmt::println(" - {}", name);
+    }
+#else
+    bool validation_layers_enabled = false;
+#endif
+
+    fmt::println("\nAvailable vulkan instance extensions:");
+    for (VkExtensionProperties& property : ky::VulkanAttributes::available_instance_extensions()) {
+        fmt::println(" - {}", property.extensionName);
+    }
+
+    fmt::println("\nRequired vulkan instance extensions:");
+    for (const char* name :
+         ky::VulkanAttributes::required_instance_extensions(validation_layers_enabled)) {
         fmt::println(" - {}", name);
     }
 }
 
-int main(int argc, char** argv) {
-    std::vector<const char*> cmd_line_args(argc);
-    for (int i = 0; i < argc; i++) {
-        cmd_line_args[i] = argv[i];
-    }
-
+int main() {
     ky::error::init();
+
     ky::WindowManager window_manager("Kryos Engine");
 
-    ky::VulkanContext rhi_context("Kryos Engine", window_manager);
     print_rhi_info();
+    ky::VulkanContext rhi_context("Kryos Engine", window_manager);
 
     ky::Input input;
     ky::Input::init(input, window_manager);
-
-    // // Test windows
-    // ky::WindowHandle& child = window_manager.create_window("Test window", 500, 500);
-    // child.create_window("Child of test window", 400, 400,
-    //                     ky::WINDOW_HANDLE_WINDOWED_BIT | ky::WINDOW_HANDLE_VSYNC_BIT);
 
     // while (window_manager.continue_runtime_loop()) {
     //     window_manager.swap_buffers();

@@ -44,25 +44,25 @@ void WindowHandle::init(const std::string_view& title, int width, int height, Wi
     //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     // #endif
 
-    // GLFWwindow* share = nullptr;
-    // if (parent != nullptr) {
-    //     share = parent->glfw_handle;
-    //     this->parent = parent;
-    // }
-    //
-    // GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    // if (width == 0 || height == 0) {
-    //     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    //     width = mode->width / 2;
-    //     height = mode->height / 2;
-    // }
-    //
-    // if (opts & ~WINDOW_HANDLE_FULLSCREEN_BIT) {
-    //     monitor = nullptr;
-    // }
-    //
-    // glfw_handle = glfwCreateWindow(width, height, title.data(), monitor, share);
-    // KY_FATAL_CONDITION_MSG(glfw_handle != nullptr, "Failed to create GLFW window");
+    GLFWwindow* share = nullptr;
+    if (parent != nullptr) {
+        share = parent->glfw_handle;
+        this->parent = parent;
+    }
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (width == 0 || height == 0) {
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        width = mode->width / 2;
+        height = mode->height / 2;
+    }
+
+    if (opts & ~WINDOW_HANDLE_FULLSCREEN_BIT) {
+        monitor = nullptr;
+    }
+
+    glfw_handle = glfwCreateWindow(width, height, title.data(), monitor, share);
+    KY_FATAL_CONDITION_MSG(glfw_handle != nullptr, "Failed to create GLFW window");
 
     // if (opts & WINDOW_HANDLE_VSYNC_BIT) {
     //     glfwSwapInterval(0);
@@ -70,7 +70,6 @@ void WindowHandle::init(const std::string_view& title, int width, int height, Wi
     //     glfwSwapInterval(1);
     // }
 
-    glfw_handle = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
     options = opts;
 }
 
@@ -141,7 +140,7 @@ void WindowHandle::close(bool close) {
 }
 
 WindowManager::WindowManager(const std::string_view& title, int opts)
-        : WindowManager(title, 0, 0, opts) {
+      : WindowManager(title, 0, 0, opts) {
 }
 
 WindowManager::WindowManager(const std::string_view& title, int width, int height, int opts) {

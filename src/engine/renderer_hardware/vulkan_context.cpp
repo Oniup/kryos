@@ -16,80 +16,162 @@
 #include "renderer_hardware/vulkan_context.h"
 
 #include "core/error.h"
+#include "renderer_hardware/vulkan_capabilities.h"
 
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
 
 namespace ky {
 
-std::vector<const char*> VulkanContext::required_instance_extensions_names() {
-    unsigned int glfw_extension_count = 0;
-    const char** glfw_extension_name = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
-
-    unsigned int count =
-        glfw_extension_count + CROSS_PLATFORM_REQUIRED_INSTANCE_EXTENSION_NAMES.size();
-    std::vector<const char*> extensions(count);
-
-    size_t j = 0;
-    for (size_t i = 0; i < count; i++) {
-        if (i < glfw_extension_count) {
-            extensions[i] = glfw_extension_name[i];
-        } else {
-            extensions[i] = CROSS_PLATFORM_REQUIRED_INSTANCE_EXTENSION_NAMES[j];
-            j++;
-        }
-    }
-    return extensions;
-}
-
-std::vector<std::string> VulkanContext::available_instance_extensions_names() {
-    unsigned int count = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-    std::vector<VkExtensionProperties> properties(count);
-    vkEnumerateInstanceExtensionProperties(nullptr, &count, properties.data());
-
-    std::vector<std::string> extensions;
-    for (size_t i = 0; i < properties.size(); i++) {
-        extensions.push_back(properties[i].extensionName);
+#ifndef NDEBUG
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+               VkDebugUtilsMessageTypeFlagsEXT message_type,
+               const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void*) {
+    // TODO: Option for verbose messages
+    if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+        KY_ERROR_MSG("Vulkan validation layer: %s", callback_data->pMessage);
     }
 
-    return extensions;
+    return VK_FALSE;
 }
+#endif
 
 VulkanContext::VulkanContext(const std::string_view& app_name, WindowManager& window_manager)
-        : _window_manager(&window_manager),
-          _app_info({
-              .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-              .pNext = nullptr,
-              .pApplicationName = app_name.data(),
-              .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-              .pEngineName = "Kryos Engine",
-              .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-              .apiVersion = VK_API_VERSION_1_0,
-          }) {
-    _init_instance();
+      : _window_manager(&window_manager) {
+#ifndef NDEBUG
+    bool validation_layers_enabled;
+    KY_FATAL_CONDITION(_init_instance(app_name, validation_layers_enabled));
+    if (validation_layers_enabled) {
+        KY_FATAL_CONDITION(_init_validation_layers());
+    }
+#else
+    _init_instance(app_name);
+#endif
 }
 
 void VulkanContext::shutdown() {
+#ifndef NDEBUG
+    auto destroy_debug_messenger = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+        _instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (destroy_debug_messenger != nullptr) {
+        destroy_debug_messenger(_instance, _debug_messenger, nullptr);
+    } else {
+        KY_ERROR_MSG("Failed to destroy vulkan debug messenger: Could not find "
+                     "vkDebugDestroyUtilsMessengerEXT");
+    }
+#endif
+
     vkDestroyInstance(_instance, nullptr);
 }
 
-bool VulkanContext::_init_instance() {
-    std::vector<const char*> extensions = required_instance_extensions_names();
+#ifndef NDEBUG
+bool VulkanContext::_init_instance(const std::string_view& app_name,
+                                   bool& validation_layers_enabled)
+#else
+bool VulkanContext::_init_instance(const std::string_view& app_name)
+#endif
+{
+#ifndef NDEBUG
+    std::vector<const char*> validation_layers = VulkanAttributes::required_validation_layers();
+    if (VulkanAttributes::check_required_validation_layers(validation_layers)) {
+        validation_layers_enabled = true;
+    } else {
+        KY_ERROR_MSG("Validation layers are disabled: Not all required layers are available");
+        validation_layers_enabled = false;
+    }
+
+    std::vector<const char*> extensions =
+        VulkanAttributes::required_instance_extensions(validation_layers_enabled);
+    if (!VulkanAttributes::check_required_instance_extensions(extensions)) {
+        KY_ERROR_MSG(
+            "Failed to create vulkan instance: Not all required extensions are available");
+        return false;
+    }
+
+    std::printf("\nLoading instance extensions:\n");
+    for (const char* name : extensions) {
+        std::printf(" - %s\n", name);
+    }
+#else
+    std::vector<const char*> extensions = VulkanAttributes::required_instance_extensions(false);
+    if (!VulkanAttributes::check_required_instance_extensions(extensions)) {
+        KY_ERROR_MSG(
+            "Failed to create vulkan instance: Not all required extensions are available");
+        return false;
+    }
+#endif
+
+    VkApplicationInfo app_info {};
+    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app_info.pNext = nullptr;
+    app_info.pApplicationName = app_name.data();
+    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.pEngineName = "Kryos Engine";
+    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.apiVersion = VK_API_VERSION_1_0;
 
     VkInstanceCreateInfo info {};
     info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    info.pApplicationInfo = &_app_info;
+    info.pApplicationInfo = &app_info;
 
-    info.enabledLayerCount = extensions.size();
-    info.ppEnabledLayerNames = extensions.data();
+#ifdef __APPLE__
+    info.flags = |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
+    info.enabledExtensionCount = (uint32_t)extensions.size();
+    info.ppEnabledExtensionNames = extensions.data();
+
+#ifndef NDEBUG
+    VkDebugUtilsMessengerCreateInfoEXT debug_info = _debug_messenger_create_info();
+    if (validation_layers_enabled) {
+        info.enabledLayerCount = (uint32_t)validation_layers.size();
+        info.ppEnabledLayerNames = validation_layers.data();
+        info.pNext = &debug_info;
+    } else {
+        info.enabledLayerCount = 0;
+        info.ppEnabledLayerNames = nullptr;
+    }
+#else
     info.enabledLayerCount = 0;
     info.ppEnabledLayerNames = nullptr;
+#endif
 
     KY_ERROR_CONDITION_MSG_RETURN(vkCreateInstance(&info, nullptr, &_instance) == VK_SUCCESS,
                                   false, "Failed to create vulkan instance");
     return true;
 }
+
+#ifndef NDEBUG
+bool VulkanContext::_init_validation_layers() {
+    VkDebugUtilsMessengerCreateInfoEXT create_info = _debug_messenger_create_info();
+
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+        _instance, "vkCreateDebugUtilsMessengerEXT");
+    KY_ERROR_CONDITION_MSG_RETURN(func != nullptr, false,
+                                  "Failed to load vulkan debug utils messenger extenion. Could "
+                                  "not find PFN_vkCreateDebugUtilsMessengerEXT");
+
+    VkResult result = func(_instance, &create_info, nullptr, &_debug_messenger);
+    KY_ERROR_CONDITION_MSG_RETURN(result == VK_SUCCESS, false,
+                                  "Failed to initialize vulkan debug utils messenger");
+    return true;
+}
+
+VkDebugUtilsMessengerCreateInfoEXT VulkanContext::_debug_messenger_create_info() {
+    VkDebugUtilsMessengerCreateInfoEXT create_info {};
+    create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    create_info.pNext = nullptr;
+    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                  VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                  VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                              VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    create_info.pfnUserCallback = debug_callback;
+    create_info.pUserData = nullptr;
+    return create_info;
+}
+#endif
 
 } // namespace ky

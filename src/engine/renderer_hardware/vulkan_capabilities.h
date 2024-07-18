@@ -13,39 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_CONTEXT_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_CONTEXT_H
+#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
+#define KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
 
-#include "core/window.h"
-
-#include <string_view>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ky {
 
-class VulkanContext {
-    friend WindowManager;
-
-public:
-    VulkanContext(const std::string_view& app_name, WindowManager& window_manager);
-
-    void shutdown();
-
-private:
-    WindowManager* _window_manager = nullptr;
-    VkInstance _instance = nullptr;
+struct VulkanAttributes {
 #ifndef NDEBUG
-    VkDebugUtilsMessengerEXT _debug_messenger;
+    static bool check_required_validation_layers(const std::vector<const char*>& required);
 #endif
+    static bool check_required_instance_extensions(const std::vector<const char*>& required);
 
 #ifndef NDEBUG
-    bool _init_instance(const std::string_view& app_name, bool& validation_layers_enabled);
-    bool _init_validation_layers();
-
-    VkDebugUtilsMessengerCreateInfoEXT _debug_messenger_create_info();
-#else
-    bool _init_instance(const std::string_view& app_name);
+    static std::vector<const char*> required_validation_layers();
 #endif
+    static std::vector<const char*> required_instance_extensions(bool validation_layers);
+
+#ifndef NDEBUG
+    static std::vector<VkLayerProperties> available_validation_layers();
+#endif
+    static std::vector<VkExtensionProperties> available_instance_extensions();
 };
 
 } // namespace ky

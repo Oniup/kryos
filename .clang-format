@@ -1,5 +1,5 @@
 ---
-BasedOnStyle: Microsoft
+BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveShortCaseStatements:
@@ -16,7 +16,6 @@ AlignEscapedNewlines: Left
 AlignOperands: AlignAfterOperator
 AllowShortFunctionsOnASingleLine: InlineOnly
 AlwaysBreakTemplateDeclarations: true
-BreakBeforeBraces: Attach
 PackConstructorInitializers: NextLineOnly
 ColumnLimit: 99
 IndentCaseBlocks: true
@@ -28,9 +27,7 @@ IndentRequiresClause: true
 IndentWrappedFunctionNames: false
 IndentWidth: 4
 PPIndentWidth: 4
-ConstructorInitializerIndentWidth: 8
-BracedInitializerIndentWidth: 4
-ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 6
 NamespaceIndentation: Inner
 InsertBraces: true
 PointerAlignment: Left
@@ -39,7 +36,6 @@ ReferenceAlignment: Pointer
 ReflowComments: true
 RemoveBracesLLVM: false
 IncludeBlocks: Regroup
-SortIncludes: CaseSensitive
 SpaceBeforeCpp11BracedList: true
 SpaceBeforeCtorInitializerColon: true
 Standard: c++17
