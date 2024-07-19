@@ -37,10 +37,7 @@ int main()
 
     ky::WindowManager windows("Kryos Engine");
 
-    ky::VulkanInstance::print_instance_capabilities();
-#ifndef NDEBUG
-    ky::VulkanInstance::print_validation_capabilities();
-#endif
+    ky::VulkanInstance::print_capabilities();
     ky::RenderHardware rhi("Kryos Engine");
 
     ky::Input input;

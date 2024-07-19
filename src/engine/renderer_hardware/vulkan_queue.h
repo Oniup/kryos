@@ -21,20 +21,10 @@
 
 namespace ky {
 
-class RenderHardware;
-
-class VulkanQueueFamilies
+struct VulkanQueueFamilies
 {
-public:
-    static std::vector<VkPhysicalDevice> available_physical_devices(RenderHardware& context);
-    static VkPhysicalDevice pick_physical_device(const std::vector<VkPhysicalDevice>& devices);
-
-    bool init(RenderHardware& context);
-    void shutdown(RenderHardware& context);
-
-private:
-    VkPhysicalDevice _physical = nullptr;
-    VkDevice _device = nullptr;
+    bool init();
+    void shutdown();
 };
 
 } // namespace ky

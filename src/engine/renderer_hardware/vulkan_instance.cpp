@@ -181,7 +181,7 @@ std::vector<VkExtensionProperties> VulkanInstance::available_instance_extensions
     return properties;
 }
 
-void VulkanInstance::print_instance_capabilities()
+void VulkanInstance::print_capabilities()
 {
     std::vector<VkExtensionProperties> properties = available_instance_extensions();
     std::vector<const char*> names(properties.size());
@@ -190,6 +190,7 @@ void VulkanInstance::print_instance_capabilities()
     }
 #ifndef NDEBUG
     constexpr bool validation_layers = true;
+    print_validation_capabilities();
 #else
     constexpr bool validation_layers = false;
 #endif

@@ -43,7 +43,7 @@ struct VulkanInstance
     static bool check_required_instance_extensions(const std::vector<const char*>& required);
     static std::vector<const char*> required_instance_extensions(bool validation_layers);
     static std::vector<VkExtensionProperties> available_instance_extensions();
-    static void print_instance_capabilities();
+    static void print_capabilities();
 
 private:
 #ifndef NDEBUG
