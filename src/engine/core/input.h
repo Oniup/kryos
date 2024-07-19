@@ -22,16 +22,14 @@
 
 namespace ky {
 
-enum class InputType
-{
+enum class InputType {
     UNKNOWN = -1,
     KEYBOARD,
     MOUSE,
     GAME_PAD,
 };
 
-enum class MouseMode
-{
+enum class MouseMode {
     INVALID = -1,
     VISABLE,
     HIDDEN,
@@ -39,10 +37,8 @@ enum class MouseMode
 
 };
 
-class Input
-{
-    struct _Registered
-    {
+class Input {
+    struct _Registered {
         InputType type = InputType::UNKNOWN;
         int code = -1;
         bool remove_next_frame = false;

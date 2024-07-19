@@ -90,7 +90,8 @@ void WindowHandle::shutdown(bool remove_child_ref_from_parent)
         }
         if (i < parent->children.size()) {
             parent->children.erase(parent->children.begin() + i);
-        } else {
+        }
+        else {
             KY_ERROR("Could not find {} window in parent window", window_title);
         }
     }
@@ -184,7 +185,8 @@ void WindowManager::_remove_closed_windows(WindowHandle& handle)
 {
     if (handle.closing()) {
         handle.shutdown();
-    } else {
+    }
+    else {
         for (WindowHandle& child : handle.children) {
             _remove_closed_windows(child);
         }

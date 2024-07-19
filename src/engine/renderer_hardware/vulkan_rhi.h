@@ -23,8 +23,7 @@
 
 namespace ky {
 
-class RenderHardware
-{
+class RenderHardware {
 public:
     RenderHardware(const std::string_view& app_name);
     void shutdown();

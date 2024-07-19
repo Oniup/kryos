@@ -1,6 +1,6 @@
 ---
 BasedOnStyle: LLVM
-BreakBeforeBraces: Mozilla
+BreakBeforeBraces: Stroustrup
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveShortCaseStatements:

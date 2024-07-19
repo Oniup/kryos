@@ -53,7 +53,8 @@
             __LINE__, fmt::format(fmt::format("`{}` == FALSE: ", #_condition) + __VA_ARGS__), \
             __FILE__, KY_FUNCTION_STR, (_context), ky::ConsoleMessage::_severity);            \
         return;                                                                               \
-    } else                                                                                    \
+    }                                                                                         \
+    else                                                                                      \
         ((void)0)
 
 #define KY_INTERNAL_CONDITION_RETURN(_context, _returning, _condition, _severity, ...)        \
@@ -62,7 +63,8 @@
             __LINE__, fmt::format(fmt::format("`{}` == FALSE: ", #_condition) + __VA_ARGS__), \
             __FILE__, KY_FUNCTION_STR, (_context), ky::ConsoleMessage::_severity);            \
         return (_returning);                                                                  \
-    } else                                                                                    \
+    }                                                                                         \
+    else                                                                                      \
         ((void)0)
 
 #ifndef NDEBUG
@@ -72,7 +74,8 @@
                 __LINE__, fmt::format(fmt::format("`{}` == FALSE: ", #_condition) + __VA_ARGS__), \
                 __FILE__, KY_FUNCTION_STR, (_context), ky::ConsoleMessage::_severity);            \
             KY_INTERNAL_GENERATE_TRAP();                                                          \
-        } else                                                                                    \
+        }                                                                                         \
+        else                                                                                      \
             ((void)0)
 #else
 #    define KY_INTERNAL_FATAL_CONDITION(_context, _condition, _severity, ...) (_condition)
@@ -169,10 +172,8 @@
 
 namespace ky {
 
-struct ConsoleMessage
-{
-    enum Severity
-    {
+struct ConsoleMessage {
+    enum Severity {
         INVALID = 0,
         VERBOSE = 1 << 0,
         TRACE = 1 << 1,
@@ -192,8 +193,7 @@ struct ConsoleMessage
     Severity severity = ConsoleMessage::INVALID;
 };
 
-enum ConsoleOutputFlags : uint32_t
-{
+enum ConsoleOutputFlags : uint32_t {
     CONSLE_CONSOLE_NONE_BIT = 0,
     CONSOLE_FLUSH_PER_MSG_BIT = 1 << 0,
     CONSOLE_COLOR_BIT = 1 << 1,
@@ -206,8 +206,7 @@ enum ConsoleOutputFlags : uint32_t
     CONSOLE_FILTER_FUNCTION_BIT = 1 << 6,
 };
 
-class ConsoleOutput
-{
+class ConsoleOutput {
 public:
     ConsoleOutput(uint32_t flags);
     virtual ~ConsoleOutput() = default;
@@ -223,8 +222,7 @@ protected:
     virtual std::string _format_body(const ConsoleMessage& msg);
 };
 
-class ConsoleManager
-{
+class ConsoleManager {
 public:
     static constexpr int DEFAULT_MESSAGING = ky::ConsoleMessage::INFO | ky::ConsoleMessage::ERROR |
                                              ky::ConsoleMessage::WARNING |
@@ -254,8 +252,7 @@ private:
     int _severity_flags;
 };
 
-class ConsoleTerminalOutput : public ConsoleOutput
-{
+class ConsoleTerminalOutput : public ConsoleOutput {
 public:
     ConsoleTerminalOutput(uint32_t flags = CONSLE_CONSOLE_NONE_BIT);
 

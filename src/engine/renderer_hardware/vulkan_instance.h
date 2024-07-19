@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
+#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_INSTANCE_H
+#define KRYOS_RENDERER_HARDWARE__VULKAN_INSTANCE_H
 
 #include <string_view>
 #include <vector>
@@ -22,8 +22,7 @@
 
 namespace ky {
 
-struct VulkanInstance
-{
+struct VulkanInstance {
     VkInstance instance = nullptr;
 
 #ifndef NDEBUG

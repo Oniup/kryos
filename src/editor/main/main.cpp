@@ -43,10 +43,10 @@ int main()
     ky::Input input;
     ky::Input::init(input, windows);
 
-    // while (window_manager.continue_runtime_loop()) {
-    //     window_manager.swap_buffers();
-    //     input.poll_events();
-    // }
+    while (windows.continue_runtime_loop()) {
+        windows.swap_buffers();
+        input.poll_events();
+    }
 
     rhi.shutdown();
     windows.shutdown();

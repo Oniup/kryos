@@ -27,7 +27,7 @@ RenderHardware::RenderHardware(const std::string_view& app_name)
 
 void RenderHardware::shutdown()
 {
-    _device.shutdown(_instance);
+    _device.shutdown();
     _instance.shutdown();
 }
 

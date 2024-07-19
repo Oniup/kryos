@@ -27,12 +27,11 @@ struct GLFWwindow;
 
 #define KY_WINDOW_HANDLE_DEFAULT KY_WINDOW_HANDLE_DEFAULT_OPTIONS | ky::WINDOW_HANDLE_WINDOWED_BIT
 
-// FIXME: Sometimes segfaults when testing with toggle input reg stuff
+// FIXME: Refactor is needed. This wasn't written with Vulkan in mind.
 
 namespace ky {
 
-enum WindowHandleFlags
-{
+enum WindowHandleFlags {
     WINDOW_HANDLE_NONE_BIT = 0,
     WINDOW_HANDLE_WINDOWED_BIT = 1 << 0,
     WINDOW_HANDLE_BORDERLESS_BIT = 1 << 1,
@@ -42,8 +41,7 @@ enum WindowHandleFlags
     WINDOW_HANDLE_TRANSPARENT_BUFFER_BIT = 1 << 5,
 };
 
-struct WindowHandle
-{
+struct WindowHandle {
     GLFWwindow* glfw_handle = nullptr;
     int options = WINDOW_HANDLE_NONE_BIT;
     WindowHandle* parent = nullptr;
@@ -51,7 +49,6 @@ struct WindowHandle
 
     void init(const std::string_view& title, int width, int height, WindowHandle* parent,
               int opts = KY_WINDOW_HANDLE_DEFAULT);
-
     void shutdown(bool remove_child_ref_from_parent = true);
 
     inline bool operator==(const WindowHandle& window) const
@@ -78,8 +75,7 @@ struct WindowHandle
     void close(bool close = true);
 };
 
-class WindowManager
-{
+class WindowManager {
 public:
     WindowManager(const std::string_view& title, int opts = KY_WINDOW_HANDLE_DEFAULT);
     WindowManager(const std::string_view& title, int width, int height,

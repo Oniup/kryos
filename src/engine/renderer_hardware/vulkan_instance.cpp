@@ -73,7 +73,8 @@ void VulkanInstance::shutdown()
         instance, "vkDestroyDebugUtilsMessengerEXT");
     if (destroy_debug_messenger != nullptr) {
         destroy_debug_messenger(instance, debug_messenger, nullptr);
-    } else {
+    }
+    else {
         KY_VULKAN_ERROR("Failed to destroy vulkan debug messenger: Could not find "
                         "vkDebugDestroyUtilsMessengerEXT");
     }
@@ -212,7 +213,8 @@ bool VulkanInstance::_init_instance(const std::string_view& app_name)
     std::vector<const char*> validation_layers = required_validation_layers();
     if (check_required_validation_layers(validation_layers)) {
         validation_layers_enabled = true;
-    } else {
+    }
+    else {
         KY_VULKAN_ERROR("Validation layers are disabled: Not all required layers "
                         "are available");
         validation_layers_enabled = false;
@@ -246,16 +248,17 @@ bool VulkanInstance::_init_instance(const std::string_view& app_name)
     info.flags = |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
-    info.enabledExtensionCount = (uint32_t)extensions.size();
+    info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     info.ppEnabledExtensionNames = extensions.data();
 
 #ifndef NDEBUG
     VkDebugUtilsMessengerCreateInfoEXT debug_info = _debug_messenger_create_info();
     if (validation_layers_enabled) {
-        info.enabledLayerCount = (uint32_t)validation_layers.size();
+        info.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
         info.ppEnabledLayerNames = validation_layers.data();
         info.pNext = &debug_info;
-    } else {
+    }
+    else {
         info.enabledLayerCount = 0;
         info.ppEnabledLayerNames = nullptr;
     }
