@@ -20,9 +20,11 @@ namespace ky {
 
 ConsoleManager* ConsoleManager::_instance_ptr = nullptr;
 
-const char* ConsoleMessage::code_to_string(ConsoleMessage::Code code)
+const char* ConsoleMessage::severity_to_string(ConsoleMessage::Severity severity)
 {
-    switch (code) {
+    switch (severity) {
+        case ConsoleMessage::TRACE:
+            return "TRACE";
         case ConsoleMessage::VERBOSE:
             return "VERBOSE";
         case ConsoleMessage::INFO:
@@ -43,12 +45,16 @@ ConsoleOutput::ConsoleOutput(uint32_t flags)
 {
 }
 
-std::string ConsoleOutput::_format_head(const ConsoleMessage& error)
+std::string ConsoleOutput::_format_head(const ConsoleMessage& msg)
 {
     fmt::text_style style;
     if (_flags & CONSOLE_COLOR_BIT) {
-        switch (error.code) {
+        switch (msg.severity) {
+            case ConsoleMessage::TRACE:
+                style = fmt::fg(fmt::color::dim_gray);
+                break;
             case ConsoleMessage::VERBOSE:
+                style = fmt::fg(fmt::color::dim_gray);
                 break;
             case ConsoleMessage::INFO:
                 style = fmt::fg(fmt::color::sky_blue);
@@ -69,99 +75,34 @@ std::string ConsoleOutput::_format_head(const ConsoleMessage& error)
         }
     }
 
-    if (error.context != nullptr) {
-        return fmt::format(style, "{} {}", error.context,
-                           ConsoleMessage::code_to_string(error.code));
+    if (msg.context != nullptr) {
+        return fmt::format(style, "{} [{}]", ConsoleMessage::severity_to_string(msg.severity),
+                           msg.context);
     } else {
-        return fmt::format(style, "{}", ConsoleMessage::code_to_string(error.code));
+        return fmt::format(style, "{}", ConsoleMessage::severity_to_string(msg.severity));
     }
 }
 
-std::string ConsoleOutput::_format_body(const ConsoleMessage& error)
+std::string ConsoleOutput::_format_body(const ConsoleMessage& msg)
 {
     std::string body;
     if (_flags & CONSOLE_BREAK_AFTER_HEADER) {
         body.append("\n");
     }
-    if (error.code > ConsoleMessage::INFO) {
+    if (msg.severity > ConsoleMessage::INFO) {
         if (_flags & ~CONSOLE_FILTER_FILE_BIT) {
-            body.append(fmt::format(" file={}", error.file));
+            body.append(fmt::format(" file={}", msg.file));
         }
         if (_flags & ~CONSOLE_FILTER_LINE_BIT) {
-            body.append(fmt::format(" line={}", error.line));
+            body.append(fmt::format(" line={}", msg.line));
         }
         if (_flags & ~CONSOLE_FILTER_FUNCTION_BIT) {
-            body.append(fmt::format(" func={}", error.function));
+            body.append(fmt::format(" func={}", msg.function));
         }
     }
     body.append(
-        fmt::format(":{}{}", (_flags & CONSOLE_BREAK_AFTER_INFO) ? "\n" : " ", error.message));
+        fmt::format(":{}{}", (_flags & CONSOLE_BREAK_AFTER_INFO) ? "\n" : " ", msg.message));
     return body;
-}
-
-void ConsoleManager::print_info(const char* function, const char* file, int line,
-                                const std::string& msg, const char* context)
-{
-    _instance_ptr->_print_output_impl(ConsoleMessage {
-        .line = line,
-        .message = msg,
-        .file = file,
-        .function = function,
-        .context = context,
-        .code = ConsoleMessage::INFO,
-    });
-}
-
-void ConsoleManager::print_verbose(const char* function, const char* file, int line,
-                                   const std::string& msg, const char* context)
-{
-    _instance_ptr->_print_output_impl(ConsoleMessage {
-        .line = line,
-        .message = msg,
-        .file = file,
-        .function = function,
-        .context = context,
-        .code = ConsoleMessage::VERBOSE,
-    });
-}
-
-void ConsoleManager::print_warning(const char* function, const char* file, int line,
-                                   const std::string& msg, const char* context)
-{
-    _instance_ptr->_print_output_impl(ConsoleMessage {
-        .line = line,
-        .message = msg,
-        .file = file,
-        .function = function,
-        .context = context,
-        .code = ConsoleMessage::WARNING,
-    });
-}
-
-void ConsoleManager::print_error(const char* function, const char* file, int line,
-                                 const std::string& msg, const char* context)
-{
-    _instance_ptr->_print_output_impl(ConsoleMessage {
-        .line = line,
-        .message = msg,
-        .file = file,
-        .function = function,
-        .context = context,
-        .code = ConsoleMessage::ERROR,
-    });
-}
-
-void ConsoleManager::print_fatal(const char* function, const char* file, int line,
-                                 const std::string& msg, const char* context)
-{
-    _instance_ptr->_print_output_impl(ConsoleMessage {
-        .line = line,
-        .message = msg,
-        .file = file,
-        .function = function,
-        .context = context,
-        .code = ConsoleMessage::FATAL,
-    });
 }
 
 ConsoleManager::ConsoleManager()
@@ -169,8 +110,8 @@ ConsoleManager::ConsoleManager()
     _instance_ptr = this;
 }
 
-ConsoleManager::ConsoleManager(std::vector<ConsoleOutput*>&& outputs)
-      : _outputs(std::move(outputs))
+ConsoleManager::ConsoleManager(std::vector<ConsoleOutput*>&& outputs, int severity_flags)
+      : _outputs(std::move(outputs)), _severity_flags(severity_flags)
 {
     _instance_ptr = this;
 }
@@ -198,10 +139,23 @@ void ConsoleManager::remove_error_output(const std::string_view& name)
     }
 }
 
-void ConsoleManager::_print_output_impl(const ConsoleMessage& error)
+void ConsoleManager::print_to_outputs(int line, const std::string& msg, const char* file,
+                                      const char* function, const char* context,
+                                      ConsoleMessage::Severity severity)
 {
-    for (ConsoleOutput* output : _outputs) {
-        output->print_output(error);
+    ConsoleMessage message {
+        .line = line,
+        .message = msg,
+        .file = file,
+        .function = function,
+        .context = context,
+        .severity = severity,
+    };
+
+    for (ConsoleOutput* output : _instance_ptr->_outputs) {
+        if (_instance_ptr->_severity_flags & severity) {
+            output->print_output(message);
+        }
     }
 }
 
@@ -210,13 +164,13 @@ ConsoleTerminalOutput::ConsoleTerminalOutput(uint32_t flags)
 {
 }
 
-void ConsoleTerminalOutput::print_output(const ConsoleMessage& error)
+void ConsoleTerminalOutput::print_output(const ConsoleMessage& msg)
 {
     FILE* out = stdout;
-    if (error.code > ConsoleMessage::WARNING) {
+    if (msg.severity > ConsoleMessage::WARNING) {
         out = stderr;
     }
-    fmt::println(out, "{}{}", _format_head(error), _format_body(error));
+    fmt::println(out, "{}{}", _format_head(msg), _format_body(msg));
     if (_flags & CONSOLE_FLUSH_PER_MSG_BIT) {
         std::fflush(out);
     }

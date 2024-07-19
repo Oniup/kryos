@@ -177,7 +177,7 @@ void WindowManager::swap_buffers()
 
 void WindowManager::_window_handle_error_callback(int error, const char* description)
 {
-    KY_ERROR("GLFW Error {}: {}", error, description);
+    KY_CONTEXT_ERROR("GLFW", "{}: {}", error, description);
 }
 
 void WindowManager::_remove_closed_windows(WindowHandle& handle)

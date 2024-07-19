@@ -13,29 +13,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_CAPABILITIES_H
+#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_QUEUE_H
+#define KRYOS_RENDERER_HARDWARE__VULKAN_QUEUE_H
 
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ky {
 
-struct VulkanCapabilities {
-#ifndef NDEBUG
-    static bool check_required_validation_layers(const std::vector<const char*>& required);
-#endif
-    static bool check_required_instance_extensions(const std::vector<const char*>& required);
+class RenderHardware;
 
-#ifndef NDEBUG
-    static std::vector<const char*> required_validation_layers();
-#endif
-    static std::vector<const char*> required_instance_extensions(bool validation_layers);
+class VulkanQueueFamilies
+{
+public:
+    static std::vector<VkPhysicalDevice> available_physical_devices(RenderHardware& context);
+    static VkPhysicalDevice pick_physical_device(const std::vector<VkPhysicalDevice>& devices);
 
-#ifndef NDEBUG
-    static std::vector<VkLayerProperties> available_validation_layers();
-#endif
-    static std::vector<VkExtensionProperties> available_instance_extensions();
+    bool init(RenderHardware& context);
+    void shutdown(RenderHardware& context);
+
+private:
+    VkPhysicalDevice _physical = nullptr;
+    VkDevice _device = nullptr;
 };
 
 } // namespace ky

@@ -22,26 +22,28 @@
 
 namespace ky {
 
-enum InputType
+enum class InputType
 {
-    INPUT_TYPE_UNKNOWN = -1,
-    INPYT_TYPE_KEYBOARD,
-    INPUT_TYPE_MOUSE,
-    INPUT_TYPE_GAME_PAD,
+    UNKNOWN = -1,
+    KEYBOARD,
+    MOUSE,
+    GAME_PAD,
 };
 
-enum MouseMode
+enum class MouseMode
 {
-    MOUSE_MODE_VISABLE,
-    MOUSE_MODE_HIDDEN,
-    MOUSE_MODE_CAPTURED,
+    INVALID = -1,
+    VISABLE,
+    HIDDEN,
+    CAPTURED,
+
 };
 
 class Input
 {
     struct _Registered
     {
-        InputType type = INPUT_TYPE_UNKNOWN;
+        InputType type = InputType::UNKNOWN;
         int code = -1;
         bool remove_next_frame = false;
         bool pressed = false;
@@ -71,6 +73,9 @@ public:
     static bool mouse_release(MouseButton button);
     static bool mouse_press(const WindowHandle& handle, MouseButton button);
     static bool mouse_release(const WindowHandle& handle, MouseButton button);
+
+    static std::string_view type_to_string(InputType type);
+    static std::string_view mouse_mode_to_string(MouseMode mode);
 
     void poll_events();
 

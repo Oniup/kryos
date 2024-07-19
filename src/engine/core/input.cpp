@@ -16,6 +16,7 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include "core/input.h"
+#include "core/console.h"
 #include <GLFW/glfw3.h>
 
 namespace ky {
@@ -41,28 +42,28 @@ void Input::init(Input& instance, WindowManager& window_manager)
     _instance = &instance;
     _instance->_window_manager = &window_manager;
     for (_Registered& reg : _instance->_reg_once_buffer) {
-        reg.type = INPUT_TYPE_UNKNOWN;
+        reg.type = InputType::UNKNOWN;
     }
 }
 
 bool Input::key_pressed(KeyCode code)
 {
-    KY_REG_ONCE_IMPL(key_press, INPYT_TYPE_KEYBOARD, code, true);
+    KY_REG_ONCE_IMPL(key_press, InputType::KEYBOARD, code, true);
 }
 
 bool Input::key_released(KeyCode code)
 {
-    KY_REG_ONCE_IMPL(key_release, INPYT_TYPE_KEYBOARD, code, false);
+    KY_REG_ONCE_IMPL(key_release, InputType::KEYBOARD, code, false);
 }
 
 bool Input::key_pressed(const WindowHandle& handle, KeyCode code)
 {
-    KY_REG_ONCE_WITH_HANDLE_IMPL(key_press, handle, INPYT_TYPE_KEYBOARD, code, true);
+    KY_REG_ONCE_WITH_HANDLE_IMPL(key_press, handle, InputType::KEYBOARD, code, true);
 }
 
 bool Input::key_released(const WindowHandle& handle, KeyCode code)
 {
-    KY_REG_ONCE_WITH_HANDLE_IMPL(key_release, handle, INPYT_TYPE_KEYBOARD, code, false);
+    KY_REG_ONCE_WITH_HANDLE_IMPL(key_release, handle, InputType::KEYBOARD, code, false);
 }
 
 bool Input::key_press(KeyCode code)
@@ -87,22 +88,22 @@ bool Input::key_release(const WindowHandle& handle, KeyCode code)
 
 bool Input::mouse_pressed(MouseButton button)
 {
-    KY_REG_ONCE_IMPL(mouse_press, INPUT_TYPE_MOUSE, button, true);
+    KY_REG_ONCE_IMPL(mouse_press, InputType::MOUSE, button, true);
 }
 
 bool Input::mouse_released(MouseButton button)
 {
-    KY_REG_ONCE_IMPL(mouse_release, INPUT_TYPE_MOUSE, button, false);
+    KY_REG_ONCE_IMPL(mouse_release, InputType::MOUSE, button, false);
 }
 
 bool Input::mouse_pressed(const WindowHandle& handle, MouseButton button)
 {
-    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_press, handle, INPUT_TYPE_MOUSE, button, true);
+    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_press, handle, InputType::MOUSE, button, true);
 }
 
 bool Input::mouse_released(const WindowHandle& handle, MouseButton button)
 {
-    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_release, handle, INPUT_TYPE_MOUSE, button, false);
+    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_release, handle, InputType::MOUSE, button, false);
 }
 
 bool Input::mouse_press(MouseButton button)
@@ -127,6 +128,34 @@ bool Input::mouse_release(const WindowHandle& handle, MouseButton button)
     return glfwGetMouseButton(handle.glfw_handle, button) == GLFW_RELEASE;
 }
 
+std::string_view Input::type_to_string(InputType type)
+{
+    switch (type) {
+        case InputType::KEYBOARD:
+            return std::string_view("Keyboard");
+        case InputType::MOUSE:
+            return std::string_view("Mouse");
+        case InputType::GAME_PAD:
+            return std::string_view("Game Pad");
+        default:
+            return std::string_view("Unknown");
+    }
+}
+
+std::string_view Input::mouse_mode_to_string(MouseMode mode)
+{
+    switch (mode) {
+        case MouseMode::VISABLE:
+            return std::string_view("Visable");
+        case MouseMode::HIDDEN:
+            return std::string_view("Hidden");
+        case MouseMode::CAPTURED:
+            return std::string_view("Captured");
+        default:
+            return std::string_view("Invalid");
+    }
+}
+
 void Input::poll_events()
 {
     glfwPollEvents();
@@ -134,7 +163,7 @@ void Input::poll_events()
     for (_Registered& reg : _instance->_reg_once_buffer) {
         if (reg_counted == _instance->_reg_count) {
             break;
-        } else if (reg.type == INPUT_TYPE_UNKNOWN) {
+        } else if (reg.type == InputType::UNKNOWN) {
             continue;
         }
         reg_counted++;
@@ -142,7 +171,7 @@ void Input::poll_events()
         if (!reg.remove_next_frame) {
             reg.remove_next_frame = true;
         } else {
-            reg.type = INPUT_TYPE_UNKNOWN;
+            reg.type = InputType::UNKNOWN;
             _instance->_reg_count--;
         }
     }
@@ -152,7 +181,7 @@ bool Input::_register_once(InputType type, int code, bool pressed)
 {
     int free_index = -1;
     for (size_t i = 0; i < _reg_once_buffer.size(); i++) {
-        if (_reg_once_buffer[i].type == INPUT_TYPE_UNKNOWN) {
+        if (_reg_once_buffer[i].type == InputType::UNKNOWN) {
             free_index = i;
             continue;
         }
@@ -163,7 +192,9 @@ bool Input::_register_once(InputType type, int code, bool pressed)
             return false;
         }
     }
-    // KY_ERROR_CONDITION_MSG_RETURN(free_index != -1, false, "Input register once buffer full");
+    KY_CONTEXT_CONDITION_ERROR_RETURN("INPUT", free_index != -1, false,
+                                      "Toggle register buffer full, cannot add {} {}",
+                                      type_to_string(type), code);
 
     _reg_once_buffer[free_index] = _Registered {
         .type = type,

@@ -16,62 +16,32 @@
 #include "core/console.h"
 #include "core/input.h"
 #include "core/window.h"
-#include "renderer_hardware/vulkan_capabilities.h"
-#include "renderer_hardware/vulkan_context.h"
+#include "renderer_hardware/vulkan_rhi.h"
 #include <fmt/format.h>
-
-void print_rhi_info()
-{
-#ifndef NDEBUG
-    bool validation_layers_enabled = true;
-    fmt::println("\nAvailable vulkan validation layers:");
-    for (VkLayerProperties& property : ky::VulkanCapabilities::available_validation_layers()) {
-        fmt::println(" - {}", property.layerName);
-    }
-
-    fmt::println("\nRequired vulkan validation layers:");
-    for (const char* name : ky::VulkanCapabilities::required_validation_layers()) {
-        fmt::println(" - {}", name);
-    }
-#else
-    bool validation_layers_enabled = false;
-#endif
-
-    fmt::println("\nAvailable vulkan instance extensions:");
-    for (VkExtensionProperties& property :
-         ky::VulkanCapabilities::available_instance_extensions()) {
-        fmt::println(" - {}", property.extensionName);
-    }
-
-    fmt::println("\nRequired vulkan instance extensions:");
-    for (const char* name :
-         ky::VulkanCapabilities::required_instance_extensions(validation_layers_enabled)) {
-        fmt::println(" - {}", name);
-    }
-}
-
-void test_console_macros()
-{
-    KY_CONTEXT_VERBOSE("HEADING", "This is {}", "a test");
-    KY_CONTEXT_INFO("HEADING", "This is {}", "a test");
-    KY_CONTEXT_WARN("HEADING", "This is {}", "a test");
-    KY_CONTEXT_ERROR("HEADING", "This is {}", "a test");
-    KY_VULKAN_CONDITION_FATAL(false, "This is {}", "a test");
-}
 
 int main()
 {
+#ifndef NDEBUG
+    ky::ConsoleManager console(
+        {
+            new ky::ConsoleTerminalOutput(ky::CONSOLE_FLUSH_PER_MSG_BIT | ky::CONSOLE_COLOR_BIT |
+                                          ky::CONSOLE_BREAK_AFTER_INFO),
+        },
+        ky::ConsoleManager::VERBOSE_MESSAGING);
+#else
     ky::ConsoleManager console({
         new ky::ConsoleTerminalOutput(ky::CONSOLE_FLUSH_PER_MSG_BIT | ky::CONSOLE_COLOR_BIT |
                                       ky::CONSOLE_BREAK_AFTER_INFO),
     });
-
-    test_console_macros();
+#endif
 
     ky::WindowManager windows("Kryos Engine");
 
-    print_rhi_info();
-    ky::VulkanContext render_hardware("Kryos Engine", windows);
+    ky::VulkanInstance::print_instance_capabilities();
+#ifndef NDEBUG
+    ky::VulkanInstance::print_validation_capabilities();
+#endif
+    ky::RenderHardware rhi("Kryos Engine");
 
     ky::Input input;
     ky::Input::init(input, windows);
@@ -81,7 +51,7 @@ int main()
     //     input.poll_events();
     // }
 
-    render_hardware.shutdown();
+    rhi.shutdown();
     windows.shutdown();
     console.shutdown();
 }

@@ -13,39 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_CONTEXT_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_CONTEXT_H
+#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_RHI_H
+#define KRYOS_RENDERER_HARDWARE__VULKAN_RHI_H
 
-#include "core/window.h"
+#include "renderer_hardware/vulkan_device.h"
+#include "renderer_hardware/vulkan_instance.h"
 #include <string_view>
 #include <vulkan/vulkan.h>
 
 namespace ky {
 
-class VulkanContext
+class RenderHardware
 {
-    friend WindowManager;
-
 public:
-    VulkanContext(const std::string_view& app_name, WindowManager& window_manager);
-
+    RenderHardware(const std::string_view& app_name);
     void shutdown();
 
 private:
-    WindowManager* _window_manager = nullptr;
-    VkInstance _instance = nullptr;
-#ifndef NDEBUG
-    VkDebugUtilsMessengerEXT _debug_messenger;
-#endif
-
-#ifndef NDEBUG
-    bool _init_instance(const std::string_view& app_name, bool& validation_layers_enabled);
-    bool _init_validation_layers();
-
-    VkDebugUtilsMessengerCreateInfoEXT _debug_messenger_create_info();
-#else
-    bool _init_instance(const std::string_view& app_name);
-#endif
+    VulkanInstance _instance;
+    VulkanDevice _device;
 };
 
 } // namespace ky
