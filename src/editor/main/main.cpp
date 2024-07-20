@@ -15,8 +15,8 @@
 
 #include "core/console.h"
 #include "core/input.h"
-#include "core/window.h"
-#include "renderer_hardware/vulkan_rhi.h"
+#include "vulkan_rhi/context.h"
+#include "vulkan_rhi/window_handle.h"
 #include <fmt/format.h>
 
 int main()
@@ -35,20 +35,20 @@ int main()
     });
 #endif
 
-    ky::WindowManager windows("Kryos Engine");
+    ky::WindowHandle window;
+    ky::Input input;
 
     ky::VulkanInstance::print_capabilities();
-    ky::RenderHardware rhi("Kryos Engine");
+    ky::VulkanContext vulkan(&window, "Kryos Engine", 0, 0,
+                             ky::WINDOW_HANDLE_WINDOWED_BIT | ky::WINDOW_HANDLE_RESIZEABLE_BIT |
+                                 ky::WINDOW_HANDLE_VSYNC_BIT);
+    ky::Input::init(input, window);
 
-    ky::Input input;
-    ky::Input::init(input, windows);
+    // while (!window.closing()) {
+    //     input.poll_events();
+    // }
 
-    while (windows.continue_runtime_loop()) {
-        windows.swap_buffers();
-        input.poll_events();
-    }
-
-    rhi.shutdown();
-    windows.shutdown();
+    window.shutdown();
+    vulkan.shutdown();
     console.shutdown();
 }

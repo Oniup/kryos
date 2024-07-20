@@ -13,45 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "renderer_hardware/vulkan_device.h"
+#include "vulkan_rhi/device.h"
 #include "core/console.h"
 #include <fmt/ranges.h>
+#include <set>
 
 namespace ky {
-
-std::vector<VkQueueFamilyProperties>
-    VulkanQueueFamilies::available_physical_device_queue_families(VkPhysicalDevice physical_device)
-{
-    uint32_t count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, nullptr);
-    std::vector<VkQueueFamilyProperties> queue_famlies(count);
-    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, queue_famlies.data());
-    return queue_famlies;
-}
-
-void VulkanQueueFamilies::init_required_indices(VkPhysicalDevice physical_device)
-{
-    std::vector<VkQueueFamilyProperties> families =
-        available_physical_device_queue_families(physical_device);
-
-    uint32_t index = 0;
-    for (const VkQueueFamilyProperties& family : families) {
-        if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphics = index;
-        }
-        index++;
-    }
-}
-
-void VulkanQueueFamilies::init_queues(VkDevice device)
-{
-    vkGetDeviceQueue(device, indices.graphics, 0, &graphics);
-}
-
-bool VulkanQueueFamilies::is_valid() const
-{
-    return indices.graphics != Indices::INVALID;
-}
 
 bool VulkanDevice::check_required_extensions(const std::vector<const char*> required)
 {
@@ -82,9 +49,8 @@ std::vector<VkPhysicalDevice>
     return devices;
 }
 
-void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device,
+void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device, VkSurfaceKHR surface,
                                         VulkanQueueFamilies* queue_families,
-                                        VkPhysicalDeviceFeatures* features,
                                         const std::vector<VkPhysicalDevice>& devices)
 {
     KY_VULKAN_CONDITION_ERROR(devices.size() > 0,
@@ -102,12 +68,10 @@ void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device,
             continue;
         }
 
-        VulkanQueueFamilies families;
-        families.init_required_indices(device);
-        if (!families.is_valid()) {
+        queue_families->init_required_indices(device, surface);
+        if (!queue_families->validate_indices()) {
             continue;
         }
-        *queue_families = std::move(families);
 
         int score = 0;
         constexpr int DISCRETE_GPU_SCORE = 1000;
@@ -127,7 +91,6 @@ void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device,
 
             if (score > physical_device_score) {
                 *physical_device = device;
-                *features = device_features;
                 physical_device_score = score;
             }
         }
@@ -142,29 +105,18 @@ void VulkanDevice::print_available_physical_devices()
 {
 }
 
-bool VulkanDevice::init(VulkanInstance& instance)
+bool VulkanDevice::init(VulkanInstance& instance, VkPhysicalDevice physical_device,
+                        const VulkanQueueFamilies& queue_families)
 {
     KY_VULKAN_CONDITION_ERROR_RETURN(instance.instance != nullptr, false,
                                      "Initialize instance before initalizing vulkan");
-    std::vector<VkPhysicalDevice> devices(available_physical_devices(instance));
 
-    VkPhysicalDeviceFeatures device_features;
-    pick_physical_device(&physical_device, &queue_families, &device_features, devices);
-    KY_VULKAN_CONDITION_FATAL(physical_device != nullptr,
-                              "Failed to find suitable physical device");
-
-    float queue_priority = 1.0f;
-    VkDeviceQueueCreateInfo queue_create_info {};
-    queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_create_info.queueFamilyIndex = queue_families.indices.graphics;
-    queue_create_info.queueCount = 1;
-    queue_create_info.pQueuePriorities = &queue_priority;
+    VkPhysicalDeviceFeatures features;
+    vkGetPhysicalDeviceFeatures(physical_device, &features);
 
     VkDeviceCreateInfo create_info {};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    create_info.queueCreateInfoCount = 1;
-    create_info.pQueueCreateInfos = &queue_create_info;
-    create_info.pEnabledFeatures = &device_features;
+    create_info.pEnabledFeatures = &features;
 
     create_info.enabledExtensionCount = 0;
 
@@ -181,11 +133,24 @@ bool VulkanDevice::init(VulkanInstance& instance)
     create_info.enabledLayerCount = 0;
 #endif
 
+    float queue_priority = 1.0f;
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    for (const auto& [type, queue] : queue_families.queues) {
+        VkDeviceQueueCreateInfo info {};
+        info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        info.queueFamilyIndex = queue.index_family;
+        info.queueCount = 1;
+        info.pQueuePriorities = &queue_priority;
+        queue_create_infos.push_back(info);
+    }
+    create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+    create_info.pQueueCreateInfos = queue_create_infos.data();
+
     VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &device);
     KY_VULKAN_CONDITION_ERROR_RETURN(result == VK_SUCCESS, false,
                                      "Failed to create physical device");
 
-    queue_families.init_queues(device);
+    this->physical_device = physical_device;
     return true;
 }
 

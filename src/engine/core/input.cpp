@@ -37,10 +37,10 @@ Input* Input::_instance = nullptr;
     }                                                                         \
     return result
 
-void Input::init(Input& instance, WindowManager& window_manager)
+void Input::init(Input& instance, WindowHandle& window)
 {
     _instance = &instance;
-    _instance->_window_manager = &window_manager;
+    _instance->_window = &window;
     for (_Registered& reg : _instance->_reg_once_buffer) {
         reg.type = InputType::UNKNOWN;
     }
@@ -56,34 +56,14 @@ bool Input::key_released(KeyCode code)
     KY_REG_ONCE_IMPL(key_release, InputType::KEYBOARD, code, false);
 }
 
-bool Input::key_pressed(const WindowHandle& handle, KeyCode code)
-{
-    KY_REG_ONCE_WITH_HANDLE_IMPL(key_press, handle, InputType::KEYBOARD, code, true);
-}
-
-bool Input::key_released(const WindowHandle& handle, KeyCode code)
-{
-    KY_REG_ONCE_WITH_HANDLE_IMPL(key_release, handle, InputType::KEYBOARD, code, false);
-}
-
 bool Input::key_press(KeyCode code)
 {
-    return glfwGetKey(_instance->_window_manager->main().glfw_handle, code) == GLFW_PRESS;
+    return glfwGetKey(_instance->_window->handle, code) == GLFW_PRESS;
 }
 
 bool Input::key_release(KeyCode code)
 {
-    return glfwGetKey(_instance->_window_manager->main().glfw_handle, code) == GLFW_RELEASE;
-}
-
-bool Input::key_press(const WindowHandle& handle, KeyCode code)
-{
-    return glfwGetKey(handle.glfw_handle, code) == GLFW_PRESS;
-}
-
-bool Input::key_release(const WindowHandle& handle, KeyCode code)
-{
-    return glfwGetKey(handle.glfw_handle, code) == GLFW_RELEASE;
+    return glfwGetKey(_instance->_window->handle, code) == GLFW_RELEASE;
 }
 
 bool Input::mouse_pressed(MouseButton button)
@@ -96,36 +76,14 @@ bool Input::mouse_released(MouseButton button)
     KY_REG_ONCE_IMPL(mouse_release, InputType::MOUSE, button, false);
 }
 
-bool Input::mouse_pressed(const WindowHandle& handle, MouseButton button)
-{
-    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_press, handle, InputType::MOUSE, button, true);
-}
-
-bool Input::mouse_released(const WindowHandle& handle, MouseButton button)
-{
-    KY_REG_ONCE_WITH_HANDLE_IMPL(mouse_release, handle, InputType::MOUSE, button, false);
-}
-
 bool Input::mouse_press(MouseButton button)
 {
-    return glfwGetMouseButton(_instance->_window_manager->main().glfw_handle, button) ==
-           GLFW_PRESS;
+    return glfwGetMouseButton(_instance->_window->handle, button) == GLFW_PRESS;
 }
 
 bool Input::mouse_release(MouseButton button)
 {
-    return glfwGetMouseButton(_instance->_window_manager->main().glfw_handle, button) ==
-           GLFW_RELEASE;
-}
-
-bool Input::mouse_press(const WindowHandle& handle, MouseButton button)
-{
-    return glfwGetMouseButton(handle.glfw_handle, button) == GLFW_PRESS;
-}
-
-bool Input::mouse_release(const WindowHandle& handle, MouseButton button)
-{
-    return glfwGetMouseButton(handle.glfw_handle, button) == GLFW_RELEASE;
+    return glfwGetMouseButton(_instance->_window->handle, button) == GLFW_RELEASE;
 }
 
 std::string_view Input::type_to_string(InputType type)
@@ -163,14 +121,16 @@ void Input::poll_events()
     for (_Registered& reg : _instance->_reg_once_buffer) {
         if (reg_counted == _instance->_reg_count) {
             break;
-        } else if (reg.type == InputType::UNKNOWN) {
+        }
+        else if (reg.type == InputType::UNKNOWN) {
             continue;
         }
         reg_counted++;
 
         if (!reg.remove_next_frame) {
             reg.remove_next_frame = true;
-        } else {
+        }
+        else {
             reg.type = InputType::UNKNOWN;
             _instance->_reg_count--;
         }

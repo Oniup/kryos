@@ -17,7 +17,7 @@
 #define KRYOS_CORE__INPUT_H
 
 #include "core/input_keycodes.h"
-#include "core/window.h"
+#include "vulkan_rhi/window_handle.h"
 #include <array>
 
 namespace ky {
@@ -48,27 +48,19 @@ class Input {
 public:
     static constexpr size_t REG_ONCE_BUFFER_SIZE = 16;
 
-    static void init(Input& instance, WindowManager& window_manager);
+    static void init(Input& instance, WindowHandle& window);
 
     static bool key_pressed(KeyCode code);
     static bool key_released(KeyCode code);
-    static bool key_pressed(const WindowHandle& handle, KeyCode code);
-    static bool key_released(const WindowHandle& handle, KeyCode code);
 
     static bool key_press(KeyCode code);
     static bool key_release(KeyCode code);
-    static bool key_press(const WindowHandle& handle, KeyCode code);
-    static bool key_release(const WindowHandle& handle, KeyCode code);
 
     static bool mouse_pressed(MouseButton button);
     static bool mouse_released(MouseButton button);
-    static bool mouse_pressed(const WindowHandle& handle, MouseButton button);
-    static bool mouse_released(const WindowHandle& handle, MouseButton button);
 
     static bool mouse_press(MouseButton button);
     static bool mouse_release(MouseButton button);
-    static bool mouse_press(const WindowHandle& handle, MouseButton button);
-    static bool mouse_release(const WindowHandle& handle, MouseButton button);
 
     static std::string_view type_to_string(InputType type);
     static std::string_view mouse_mode_to_string(MouseMode mode);
@@ -76,7 +68,7 @@ public:
     void poll_events();
 
 private:
-    WindowManager* _window_manager = nullptr;
+    WindowHandle* _window = nullptr;
     size_t _reg_count = 0;
     std::array<_Registered, REG_ONCE_BUFFER_SIZE> _reg_once_buffer;
 

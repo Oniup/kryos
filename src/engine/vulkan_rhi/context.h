@@ -13,22 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "renderer_hardware/vulkan_rhi.h"
-#include <GLFW/glfw3.h>
-#include <fmt/format.h>
+#ifndef KRYOS_VULKAN_RHI__CONTEXT_H
+#define KRYOS_VULKAN_RHI__CONTEXT_H
+
+#include "vulkan_rhi/device.h"
+#include "vulkan_rhi/instance.h"
+#include "vulkan_rhi/queue.h"
+#include <string_view>
+#include <vulkan/vulkan.h>
 
 namespace ky {
 
-RenderHardware::RenderHardware(const std::string_view& app_name)
-{
-    _instance.init(app_name);
-    _device.init(_instance);
-}
+class VulkanContext {
+    friend struct WindowHandle;
 
-void RenderHardware::shutdown()
-{
-    _device.shutdown();
-    _instance.shutdown();
-}
+public:
+    VulkanContext(struct WindowHandle* window, const std::string_view& title, int window_width,
+                  int window_height, int window_opts = 0);
+    void shutdown();
+
+private:
+    VulkanInstance _instance;
+    VulkanDevice _device;
+    VulkanQueueFamilies _queue_families;
+};
 
 } // namespace ky
+
+#endif

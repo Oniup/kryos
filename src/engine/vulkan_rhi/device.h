@@ -13,39 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_DEVICE_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_DEVICE_H
+#ifndef KRYOS_VULKAN_RHI__DEVICE_H
+#define KRYOS_VULKAN_RHI__DEVICE_H
 
-#include "renderer_hardware/vulkan_instance.h"
-#include <limits>
+#include "vulkan_rhi/instance.h"
+#include "vulkan_rhi/queue.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ky {
 
-struct VulkanQueueFamilies {
-    struct Indices {
-        static constexpr uint32_t INVALID = std::numeric_limits<uint32_t>::max();
-        uint32_t graphics = Indices::INVALID;
-    };
-
-public:
-    Indices indices;
-    VkQueue graphics;
-
-    static std::vector<VkQueueFamilyProperties>
-        available_physical_device_queue_families(VkPhysicalDevice physical_device);
-
-    void init_required_indices(VkPhysicalDevice physical_device);
-    void init_queues(VkDevice device);
-
-    bool is_valid() const;
-};
-
 struct VulkanDevice {
     VkPhysicalDevice physical_device = nullptr;
     VkDevice device = nullptr;
-    VulkanQueueFamilies queue_families;
 
     static bool check_required_extensions(const std::vector<const char*> required);
     static std::vector<const char*> required_extensions();
@@ -55,15 +35,15 @@ struct VulkanDevice {
     static std::vector<VkPhysicalDevice>
         available_physical_devices(const VulkanInstance& instance);
 
-    static void pick_physical_device(VkPhysicalDevice* physical_device,
+    static void pick_physical_device(VkPhysicalDevice* physical_device, VkSurfaceKHR surface,
                                      VulkanQueueFamilies* queue_families,
-                                     VkPhysicalDeviceFeatures* features,
                                      const std::vector<VkPhysicalDevice>& devices);
 
     static void print_capabilities();
     static void print_available_physical_devices();
 
-    bool init(VulkanInstance& instance);
+    bool init(VulkanInstance& instance, VkPhysicalDevice physical_device,
+              const VulkanQueueFamilies& queue_families);
     void shutdown();
 };
 

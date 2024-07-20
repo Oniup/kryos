@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KRYOS_RENDERER_HARDWARE__VULKAN_INSTANCE_H
-#define KRYOS_RENDERER_HARDWARE__VULKAN_INSTANCE_H
+#ifndef KRYOS_VULKAN_RHI__INSTANCE_H
+#define KRYOS_VULKAN_RHI__INSTANCE_H
 
 #include <string_view>
 #include <vector>

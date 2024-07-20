@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "renderer_hardware/vulkan_instance.h"
+#include "vulkan_rhi/instance.h"
 #include "core/console.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
@@ -52,6 +52,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 
 void VulkanInstance::init(const std::string_view& app_name)
 {
+    KY_VULKAN_CONDITION_FATAL(glfwInit(), "Failed to initialize glfw");
 #ifndef NDEBUG
     bool validation_layers_enabled;
     bool result = _init_instance(app_name, validation_layers_enabled);
@@ -81,6 +82,7 @@ void VulkanInstance::shutdown()
 #endif
 
     vkDestroyInstance(instance, nullptr);
+    glfwTerminate();
 }
 
 #ifndef NDEBUG
