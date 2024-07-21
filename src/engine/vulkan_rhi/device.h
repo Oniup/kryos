@@ -27,7 +27,8 @@ struct VulkanDevice {
     VkPhysicalDevice physical_device = nullptr;
     VkDevice device = nullptr;
 
-    static bool check_required_extensions(const std::vector<const char*> required);
+    static bool check_required_extensions(VkPhysicalDevice device,
+                                          const std::vector<const char*> required);
     static std::vector<const char*> required_extensions();
 
     static std::vector<VkExtensionProperties>
@@ -39,8 +40,9 @@ struct VulkanDevice {
                                      VulkanQueueFamilies* queue_families,
                                      const std::vector<VkPhysicalDevice>& devices);
 
-    static void print_capabilities();
-    static void print_available_physical_devices();
+    static void print_devices(VkPhysicalDevice choosen_device, const VulkanInstance& instance);
+    static std::string devices_info_str(VkPhysicalDevice choosen_device,
+                                        const VulkanInstance& instance);
 
     bool init(VulkanInstance& instance, VkPhysicalDevice physical_device,
               const VulkanQueueFamilies& queue_families);

@@ -16,27 +16,44 @@
 #include "vulkan_rhi/device.h"
 #include "core/console.h"
 #include <fmt/ranges.h>
-#include <set>
+#include <vulkan/vulkan_core.h>
 
 namespace ky {
 
-bool VulkanDevice::check_required_extensions(const std::vector<const char*> required)
+bool VulkanDevice::check_required_extensions(VkPhysicalDevice physical_device,
+                                             const std::vector<const char*> required)
 {
-    // TODO: ....
-    return false;
+    const std::vector<VkExtensionProperties> extensions(available_extensions(physical_device));
+    for (const char* name : required) {
+        bool found = false;
+        for (const VkExtensionProperties& property : extensions) {
+            if (std::strncmp(name, property.extensionName, std::strlen(name)) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::vector<const char*> VulkanDevice::required_extensions()
 {
-    // TODO: ....
-    return {};
+    return std::vector {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    };
 }
 
 std::vector<VkExtensionProperties>
     VulkanDevice::available_extensions(VkPhysicalDevice physical_device)
 {
-    // TODO: ....
-    return {};
+    uint32_t count;
+    vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &count, nullptr);
+    std::vector<VkExtensionProperties> extensions(count);
+    vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &count, extensions.data());
+    return extensions;
 }
 
 std::vector<VkPhysicalDevice>
@@ -68,8 +85,9 @@ void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device, VkSur
             continue;
         }
 
-        queue_families->init_required_indices(device, surface);
-        if (!queue_families->validate_indices()) {
+        VulkanQueueFamilies families;
+        families.init_required_indices(device, surface);
+        if (!families.validate_indices()) {
             continue;
         }
 
@@ -91,18 +109,53 @@ void VulkanDevice::pick_physical_device(VkPhysicalDevice* physical_device, VkSur
 
             if (score > physical_device_score) {
                 *physical_device = device;
+                *queue_families = std::move(families);
                 physical_device_score = score;
             }
         }
     }
 }
 
-void VulkanDevice::print_capabilities()
+std::string VulkanDevice::devices_info_str(VkPhysicalDevice choosen_device,
+                                           const VulkanInstance& instance)
 {
+    std::vector<VkPhysicalDevice> devices(VulkanDevice::available_physical_devices(instance));
+    std::string msg = "Physical Devices:\n";
+    for (VkPhysicalDevice device : devices) {
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(device, &properties);
+
+        const char* type;
+        switch (properties.deviceType) {
+            case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+                type = "Intergrated GPU";
+                break;
+            case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+                type = "Discrete GPU";
+                break;
+            case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+                type = "Virtual GPU";
+                break;
+            case VK_PHYSICAL_DEVICE_TYPE_CPU:
+                type = "CPU";
+                break;
+            default:
+                type = "Other";
+                break;
+        }
+
+        msg = fmt::format("{}{}", msg,
+                          fmt::format("{}{}\n - ID: {}\n - Type: {}\n - Version: {}",
+                                      properties.deviceName,
+                                      choosen_device == device ? " => Active" : "",
+                                      properties.deviceID, type, properties.driverVersion));
+    }
+    return msg;
 }
 
-void VulkanDevice::print_available_physical_devices()
+void VulkanDevice::print_devices(VkPhysicalDevice choosen_device, const VulkanInstance& instance)
 {
+    KY_VULKAN_INFO(devices_info_str(choosen_device, instance));
 }
 
 bool VulkanDevice::init(VulkanInstance& instance, VkPhysicalDevice physical_device,
@@ -110,6 +163,7 @@ bool VulkanDevice::init(VulkanInstance& instance, VkPhysicalDevice physical_devi
 {
     KY_VULKAN_CONDITION_ERROR_RETURN(instance.instance != nullptr, false,
                                      "Initialize instance before initalizing vulkan");
+    KY_VULKAN_VERBOSE(devices_info_str(physical_device, instance));
 
     VkPhysicalDeviceFeatures features;
     vkGetPhysicalDeviceFeatures(physical_device, &features);

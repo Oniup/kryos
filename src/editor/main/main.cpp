@@ -29,19 +29,19 @@ int main()
         },
         ky::ConsoleManager::VERBOSE_MESSAGING);
 #else
-    ky::ConsoleManager console({
-        new ky::ConsoleTerminalOutput(ky::CONSOLE_FLUSH_PER_MSG_BIT | ky::CONSOLE_COLOR_BIT |
-                                      ky::CONSOLE_BREAK_AFTER_INFO),
-    });
+    ky::ConsoleManager console(
+        {new ky::ConsoleTerminalOutput(ky::CONSOLE_FLUSH_PER_MSG_BIT | ky::CONSOLE_COLOR_BIT |
+                                       ky::CONSOLE_BREAK_AFTER_INFO),
+         });
 #endif
 
     ky::WindowHandle window;
     ky::Input input;
 
-    ky::VulkanInstance::print_capabilities();
     ky::VulkanContext vulkan(&window, "Kryos Engine", 0, 0,
                              ky::WINDOW_HANDLE_WINDOWED_BIT | ky::WINDOW_HANDLE_RESIZEABLE_BIT |
                                  ky::WINDOW_HANDLE_VSYNC_BIT);
+
     ky::Input::init(input, window);
 
     // while (!window.closing()) {

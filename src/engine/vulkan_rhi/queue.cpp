@@ -17,6 +17,7 @@
 #include "core/console.h"
 #include "vulkan_rhi/device.h"
 #include <fmt/ranges.h>
+#include <vulkan/vulkan_core.h>
 
 namespace ky {
 
@@ -39,8 +40,17 @@ void VulkanQueueFamilies::init_required_indices(VkPhysicalDevice physical_device
     uint32_t index = 0;
     for (const VkQueueFamilyProperties& family : families) {
         if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            queues[(VulkanQueueType)VK_QUEUE_GRAPHICS_BIT] =
-                VulkanQueue {.index_family = index, .instance = nullptr};
+            queues[(VulkanQueueType)VK_QUEUE_GRAPHICS_BIT] = VulkanQueue {
+                .index_family = index,
+            };
+        }
+
+        VkBool32 present_supported;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, index, surface, &present_supported);
+        if (present_supported) {
+            queues[VulkanQueueType::PRESET] = VulkanQueue {
+                .index_family = index,
+            };
         }
         index++;
     }
@@ -51,7 +61,7 @@ void VulkanQueueFamilies::init_queues(VulkanDevice& device)
     for (auto& [type, queue] : queues) {
         vkGetDeviceQueue(device.device, queue.index_family, 0, &queue.instance);
     }
-    KY_VULKAN_VERBOSE("Initialized queues:\n\t* {}", fmt::join(queues, "\n\t* "));
+    KY_VULKAN_VERBOSE("Device Queues:\n{}", queues_info_str());
 }
 
 bool VulkanQueueFamilies::validate_indices() const
@@ -72,6 +82,16 @@ bool VulkanQueueFamilies::validate() const
         }
     }
     return true;
+}
+
+void VulkanQueueFamilies::print_queues() const
+{
+    KY_VULKAN_INFO(queues_info_str());
+}
+
+std::string VulkanQueueFamilies::queues_info_str() const
+{
+    return fmt::format(" - {}", fmt::join(queues, "\n - "));
 }
 
 } // namespace ky

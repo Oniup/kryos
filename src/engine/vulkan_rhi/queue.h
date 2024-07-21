@@ -55,6 +55,9 @@ struct VulkanQueueFamilies {
 
     bool validate_indices() const;
     bool validate() const;
+
+    void print_queues() const;
+    std::string queues_info_str() const;
 };
 
 } // namespace ky

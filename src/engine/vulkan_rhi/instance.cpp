@@ -21,12 +21,7 @@
 
 namespace ky {
 
-static std::vector<const char*> _CROSS_PLATFORM_REQUIRED_INSTANCE_EXTENSION_NAMES {};
-
 #ifndef NDEBUG
-static std::vector<const char*> _REQUIRED_VALIDATION_LAYER_NAMES {
-    "VK_LAYER_KHRONOS_validation",
-};
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT,
@@ -53,7 +48,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 void VulkanInstance::init(const std::string_view& app_name)
 {
     KY_VULKAN_CONDITION_FATAL(glfwInit(), "Failed to initialize glfw");
+
+    KY_VULKAN_VERBOSE(extensions_info_str());
 #ifndef NDEBUG
+    KY_VULKAN_VERBOSE(validation_layers_info_str());
+
     bool validation_layers_enabled;
     bool result = _init_instance(app_name, validation_layers_enabled);
     KY_VULKAN_CONDITION_FATAL(result, "Failed to initialize instance");
@@ -88,11 +87,10 @@ void VulkanInstance::shutdown()
 #ifndef NDEBUG
 bool VulkanInstance::check_required_validation_layers(const std::vector<const char*>& required)
 {
-    std::vector<VkLayerProperties> properties = available_validation_layers();
-
+    std::vector<VkLayerProperties> layers = available_validation_layers();
     for (const char* layer : required) {
         bool found = false;
-        for (VkLayerProperties& property : properties) {
+        for (VkLayerProperties& property : layers) {
             bool compare =
                 std::strncmp(layer, property.layerName, std::strlen(property.layerName)) == 0;
             if (compare) {
@@ -109,7 +107,9 @@ bool VulkanInstance::check_required_validation_layers(const std::vector<const ch
 
 std::vector<const char*> VulkanInstance::required_validation_layers()
 {
-    return _REQUIRED_VALIDATION_LAYER_NAMES;
+    return std::vector {
+        "VK_LAYER_KHRONOS_validation",
+    };
 }
 
 std::vector<VkLayerProperties> VulkanInstance::available_validation_layers()
@@ -121,27 +121,33 @@ std::vector<VkLayerProperties> VulkanInstance::available_validation_layers()
     return properties;
 }
 
-void VulkanInstance::print_validation_capabilities()
+void VulkanInstance::print_layers()
+{
+    KY_VULKAN_INFO(validation_layers_info_str());
+}
+
+std::string VulkanInstance::validation_layers_info_str()
 {
     std::vector<VkLayerProperties> properties = available_validation_layers();
     std::vector<const char*> names(properties.size());
     for (size_t i = 0; i < properties.size(); i++) {
         names[i] = properties[i].layerName;
     }
-    KY_CONTEXT_INFO("VULKAN Validation Layer Capabilities", "\t* {}", fmt::join(names, "\n\t* "));
-    KY_CONTEXT_INFO("VULKAN Required Validation Layers", "\t* {}",
-                    fmt::join(VulkanInstance::required_validation_layers(), "\n\t* "));
+    std::string msg = fmt::format(
+        "Validation Layer Capabilities:\n - {}\nRequired:\n - {}", fmt::join(names, "\n - "),
+        fmt::join(VulkanInstance::required_validation_layers(), "\n - "));
+    return msg;
 }
+
 #endif
 
 bool VulkanInstance::check_required_instance_extensions(const std::vector<const char*>& required)
 {
-    std::vector<VkExtensionProperties> properties = available_instance_extensions();
-
-    for (const char* layer : required) {
+    std::vector<VkExtensionProperties> extensions = available_instance_extensions();
+    for (const char* name : required) {
         bool found = false;
-        for (VkExtensionProperties& property : properties) {
-            bool compare = std::strncmp(layer, property.extensionName,
+        for (VkExtensionProperties& property : extensions) {
+            bool compare = std::strncmp(name, property.extensionName,
                                         std::strlen(property.extensionName)) == 0;
             if (compare) {
                 found = true;
@@ -157,13 +163,15 @@ bool VulkanInstance::check_required_instance_extensions(const std::vector<const 
 
 std::vector<const char*> VulkanInstance::required_instance_extensions(bool validation_layers)
 {
+    constexpr const char* required_extensions[] {};
+
     uint32_t glfw_extension_count = 0;
     const char** glfw_extension_names = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     std::vector<const char*> extensions(glfw_extension_names,
                                         glfw_extension_names + glfw_extension_count);
 
-    for (const char* cross_platform : _CROSS_PLATFORM_REQUIRED_INSTANCE_EXTENSION_NAMES) {
-        extensions.push_back(cross_platform);
+    for (const char* name : required_extensions) {
+        extensions.push_back(name);
     }
 
     if (validation_layers) {
@@ -184,7 +192,12 @@ std::vector<VkExtensionProperties> VulkanInstance::available_instance_extensions
     return properties;
 }
 
-void VulkanInstance::print_capabilities()
+void VulkanInstance::print_extensions()
+{
+    KY_VULKAN_INFO(extensions_info_str());
+}
+
+std::string VulkanInstance::extensions_info_str()
 {
     std::vector<VkExtensionProperties> properties = available_instance_extensions();
     std::vector<const char*> names(properties.size());
@@ -193,15 +206,12 @@ void VulkanInstance::print_capabilities()
     }
 #ifndef NDEBUG
     constexpr bool validation_layers = true;
-    print_validation_capabilities();
 #else
     constexpr bool validation_layers = false;
 #endif
-    KY_CONTEXT_INFO("VULKAN Instance Extension Capabilities", "\t* {}",
-                    fmt::join(names, "\n\t* "));
-    KY_CONTEXT_INFO(
-        "VULKAN Required Instance Extensions", "\t* {}",
-        fmt::join(VulkanInstance::required_instance_extensions(validation_layers), "\n\t* "));
+    return fmt::format(
+        "Instance Extension Capabilities:\n - {}\nRequired:\n - {}", fmt::join(names, "\n - "),
+        fmt::join(VulkanInstance::required_instance_extensions(validation_layers), "\n - "));
 }
 
 #ifndef NDEBUG

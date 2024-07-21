@@ -36,16 +36,19 @@ struct VulkanInstance {
     static bool check_required_validation_layers(const std::vector<const char*>& required);
     static std::vector<const char*> required_validation_layers();
     static std::vector<VkLayerProperties> available_validation_layers();
-    static void print_validation_capabilities();
+    static void print_layers();
+    static std::string validation_layers_info_str();
 #endif
 
     static bool check_required_instance_extensions(const std::vector<const char*>& required);
     static std::vector<const char*> required_instance_extensions(bool validation_layers);
     static std::vector<VkExtensionProperties> available_instance_extensions();
-    static void print_capabilities();
+    static void print_extensions();
+    static std::string extensions_info_str();
 
 private:
 #ifndef NDEBUG
+
     bool _init_instance(const std::string_view& app_name, bool& validation_layers_enabled);
     bool _init_validation_layers();
 

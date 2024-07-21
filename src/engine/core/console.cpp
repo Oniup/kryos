@@ -78,7 +78,8 @@ std::string ConsoleOutput::_format_head(const ConsoleMessage& msg)
     if (msg.context != nullptr) {
         return fmt::format(style, "{} [{}]", ConsoleMessage::severity_to_string(msg.severity),
                            msg.context);
-    } else {
+    }
+    else {
         return fmt::format(style, "{}", ConsoleMessage::severity_to_string(msg.severity));
     }
 }
